@@ -1,0 +1,23 @@
+# FastAPI and server
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-socketio>=5.11.0
+python-multipart>=0.0.6
+
+# ML Frameworks
+torch
+torchvision
+ultralytics>=8.1.0
+numpy>=1.26.3
+pillow>=10.3.0
+opencv-python>=4.9.0.80
+
+# GPU monitoring (Linux/Windows only)
+pynvml>=11.5.0
+
+# Data validation and settings
+pydantic>=2.9.0
+
+# Utilities
+pyyaml>=6.0.1
+python-dateutil>=2.8.2

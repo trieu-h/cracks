@@ -1,0 +1,36 @@
+# Backend datasets folder
+backend/datasets/
+backend/datasets/*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+env/
+ENV/
+
+# Checkpoints and model weights
+backend/checkpoints/
+*.pt
+*.pth
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

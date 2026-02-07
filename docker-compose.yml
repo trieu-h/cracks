@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: crack-detection-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/checkpoints:/app/checkpoints
+      - ./backend/datasets:/app/datasets
+    environment:
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - crack-network
+
+  frontend:
+    build: ./frontend
+    container_name: crack-detection-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - crack-network
+
+networks:
+  crack-network:
+    driver: bridge
