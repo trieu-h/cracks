@@ -31,6 +31,26 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const activeSession = sessions.find(s => s.status === 'running');
+
+  // WebSocket for live training updates
+  useWebSocket(
+    activeSession ? `/ws/training/${activeSession.id}` : null,
+    (data) => {
+      if (data.type === 'epoch') {
+        // Update the session's current_epoch in real-time
+        setSessions(prevSessions => 
+          prevSessions.map(session => 
+            session.id === activeSession?.id 
+              ? { ...session, current_epoch: data.epoch }
+              : session
+          )
+        );
+      } else if (data.type === 'complete') {
+        // Refresh sessions when training completes
+        getTrainingSessions().then(res => setSessions(res.data));
+      }
+    }
+  );
   const runningCount = sessions.filter(s => s.status === 'running').length;
   const completedCount = sessions.filter(s => s.status === 'completed').length;
 

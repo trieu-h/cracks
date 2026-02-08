@@ -4,17 +4,21 @@ Training functions - YOLO and RF-DETR, no classes.
 import threading
 import uuid
 import time
+import asyncio
 from typing import Dict, Callable, Optional
 from pathlib import Path
 
 def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] = None,
-               on_complete: Optional[Callable] = None, stop_event: Optional[threading.Event] = None):
+               on_complete: Optional[Callable] = None, stop_event: Optional[threading.Event] = None,
+               event_loop: Optional[asyncio.AbstractEventLoop] = None):
     """Simple YOLO training function."""
     try:
         from ultralytics import YOLO
+        import torch
 
         # Load model
-        model = YOLO(config.get('model', 'yolo12n-seg.pt'))
+        model = YOLO("./models/" + config.get('model', 'yolo11n-seg.pt'))
+        device = "0" if torch.cuda.is_available() else "cpu"
 
         # Training arguments
         args = {
@@ -22,7 +26,7 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
             'epochs': config.get('epochs', 100),
             'imgsz': config.get('imgsz', 640),
             'batch': config.get('batch', 16),
-            'device': config.get('device', '0'),
+            'device': device,
             'lr0': config.get('lr0', 0.01),
             'lrf': config.get('lrf', 0.01),
             'momentum': config.get('momentum', 0.937),
@@ -36,19 +40,30 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
 
         # Custom callback for epoch end
         def callback_trainer(trainer):
+            print(f"Callback triggered for session {session_id}")
             if stop_event and stop_event.is_set():
                 trainer.stop = True
                 return
 
             epoch = trainer.epoch
+            print(f"Epoch completed: {epoch}")
+            
+            # Convert tensors to floats for JSON serialization
+            def to_float(val):
+                if hasattr(val, 'item'):  # Tensor
+                    return float(val.item())
+                return float(val) if val is not None else 0.0
+            
             metrics = {
                 'epoch': epoch,
-                'box_loss': trainer.loss_items[0] if hasattr(trainer, 'loss_items') else 0,
-                'cls_loss': trainer.loss_items[1] if hasattr(trainer, 'loss_items') else 0,
-                'dfl_loss': trainer.loss_items[2] if hasattr(trainer, 'loss_items') else 0,
+                'box_loss': to_float(trainer.loss_items[0]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 0 else 0.0,
+                'cls_loss': to_float(trainer.loss_items[1]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 1 else 0.0,
+                'dfl_loss': to_float(trainer.loss_items[2]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 2 else 0.0,
             }
+            print(f"Metrics: {metrics}")
 
             if on_epoch_end:
+                print(f"Calling on_epoch_end callback")
                 on_epoch_end(session_id, epoch, metrics)
 
         # Add callback
@@ -66,7 +81,8 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
             on_complete(session_id, False, str(e))
 
 def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable] = None,
-                 on_complete: Optional[Callable] = None, stop_event: Optional[threading.Event] = None):
+                 on_complete: Optional[Callable] = None, stop_event: Optional[threading.Event] = None,
+                 event_loop: Optional[asyncio.AbstractEventLoop] = None):
     """RF-DETR training placeholder."""
     # TODO: Implement RF-DETR training when library is available
     print(f"RF-DETR training not yet implemented for session {session_id}")
@@ -97,6 +113,10 @@ def start_training_session(config: Dict, storage: Dict) -> str:
     # Create stop event
     stop_event = threading.Event()
 
+    # Get the stored event loop from storage (set during startup)
+    event_loop = storage.get('event_loop')
+    print(f"Using event loop from storage: {event_loop}")
+
     # Store session
     storage['training_sessions'][session_id] = {
         'id': session_id,
@@ -112,21 +132,41 @@ def start_training_session(config: Dict, storage: Dict) -> str:
 
     # Start training in thread
     def on_epoch_end(sid, epoch, metrics):
+        # print("epoch end\n");
+        # print(epoch);
+        # print(metrics);
+
         if sid in storage['training_sessions']:
             storage['training_sessions'][sid]['current_epoch'] = epoch
             storage['training_sessions'][sid]['metrics'].append(metrics)
 
             # Broadcast to WebSocket if available
+            print(f"Checking websockets for session {sid}: {sid in storage.get('active_websockets', {})}")
             if sid in storage.get('active_websockets', {}):
+                print(f"Found {len(storage['active_websockets'][sid])} websocket(s)")
                 for ws in storage['active_websockets'][sid]:
                     try:
-                        ws.send_json({
-                            'type': 'epoch',
-                            'epoch': epoch,
-                            'metrics': metrics
-                        })
-                    except:
-                        pass
+                        print(f"Sending epoch {epoch} to websocket, event_loop: {event_loop}, is_running: {event_loop.is_running() if event_loop else False}")
+                        # Use run_coroutine_threadsafe to call async method from sync context
+                        if event_loop and event_loop.is_running():
+                            future = asyncio.run_coroutine_threadsafe(
+                                ws.send_json({
+                                    'type': 'epoch',
+                                    'epoch': epoch,
+                                    'metrics': metrics
+                                }),
+                                event_loop
+                            )
+                            # Wait for the result with timeout to catch any errors
+                            try:
+                                future.result(timeout=5.0)
+                                print(f"Sent epoch {epoch} successfully")
+                            except Exception as send_error:
+                                print(f"Failed to send epoch {epoch}: {send_error}")
+                        else:
+                            print(f"Cannot send: event_loop not available or not running")
+                    except Exception as e:
+                        print(f"WebSocket send error: {e}")
 
     def on_complete(sid, success, result):
         if sid in storage['training_sessions']:
@@ -137,26 +177,31 @@ def start_training_session(config: Dict, storage: Dict) -> str:
             if sid in storage.get('active_websockets', {}):
                 for ws in storage['active_websockets'][sid]:
                     try:
-                        ws.send_json({
-                            'type': 'complete',
-                            'success': success,
-                            'result': result
-                        })
-                    except:
-                        pass
+                        # Use run_coroutine_threadsafe to call async method from sync context
+                        if event_loop and event_loop.is_running():
+                            asyncio.run_coroutine_threadsafe(
+                                ws.send_json({
+                                    'type': 'complete',
+                                    'success': success,
+                                    'result': result
+                                }),
+                                event_loop
+                            )
+                    except Exception as e:
+                        print(f"WebSocket send error: {e}")
 
     model_type = config.get('model_type', 'yolo')
 
     if model_type == 'yolo':
         thread = threading.Thread(
             target=train_yolo,
-            args=(config, session_id, on_epoch_end, on_complete, stop_event),
+            args=(config, session_id, on_epoch_end, on_complete, stop_event, event_loop),
             daemon=True
         )
     else:
         thread = threading.Thread(
             target=train_rfdetr,
-            args=(config, session_id, on_epoch_end, on_complete, stop_event),
+            args=(config, session_id, on_epoch_end, on_complete, stop_event, event_loop),
             daemon=True
         )
 

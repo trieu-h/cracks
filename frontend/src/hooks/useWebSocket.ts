@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
 
@@ -7,32 +6,53 @@ export function useWebSocket(
   path: string | null,
   onMessage: (data: any) => void
 ) {
-  const socketRef = useRef<Socket | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const onMessageRef = useRef(onMessage);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   useEffect(() => {
     if (!path) return;
 
-    const socket = io(`${WS_URL}${path}`);
-    socketRef.current = socket;
+    const wsUrl = `${WS_URL}${path}`;
+    console.log('Connecting to WebSocket:', wsUrl);
 
-    socket.on('connect', () => {
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
       console.log('WebSocket connected:', path);
-    });
+    };
 
-    socket.on('message', onMessage);
+    ws.onmessage = (event) => {
+      console.log("WebSocket message received:", event.data);
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Parsed WebSocket data:", data);
+        onMessageRef.current(data);
+      } catch (e) {
+        console.error('Failed to parse WebSocket message:', e);
+      }
+    };
 
-    socket.on('disconnect', () => {
+    ws.onclose = () => {
       console.log('WebSocket disconnected:', path);
-    });
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
 
     return () => {
-      socket.disconnect();
+      ws.close();
     };
-  }, [path, onMessage]);
+  }, [path]);
 
   const sendMessage = useCallback((data: any) => {
-    if (socketRef.current) {
-      socketRef.current.emit('message', data);
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(data));
     }
   }, []);
 

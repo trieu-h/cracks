@@ -30,10 +30,15 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     """Start GPU monitoring when server starts."""
+    import asyncio
+    # Store the event loop for WebSocket broadcasts from training threads
+    storage['event_loop'] = asyncio.get_running_loop()
+    print(f"Stored event loop: {storage['event_loop']}")
+    
     def on_gpu_update(stats):
         # Could broadcast to WebSocket here if needed
         pass
-
+    
     monitor_gpu(on_gpu_update, interval=2.0, storage_list=storage['gpu_history'])
 
 # ===== DATASET ENDPOINTS =====
@@ -258,23 +263,30 @@ def health_check():
 
 @app.websocket("/ws/training/{session_id}")
 async def training_websocket(websocket: WebSocket, session_id: str):
+    print(f"WebSocket connection requested for session: {session_id}")
     """WebSocket for live training updates."""
     await websocket.accept()
+    print(f"WebSocket accepted for session: {session_id}")
 
     # Register WebSocket for this session
     if session_id not in storage['active_websockets']:
         storage['active_websockets'][session_id] = []
     storage['active_websockets'][session_id].append(websocket)
+    print(f"WebSocket registered for session {session_id}. Total websockets: {len(storage['active_websockets'][session_id])}")
+    print(f"Active sessions: {list(storage['active_websockets'].keys())}")
 
     try:
         while True:
             # Keep connection alive and handle any client messages
             data = await websocket.receive_text()
+            print(f"Received message from client for session {session_id}: {data}")
             # Could handle client commands here
     except WebSocketDisconnect:
+        print(f"WebSocket disconnected for session: {session_id}")
         # Remove WebSocket when disconnected
         if session_id in storage['active_websockets']:
             storage['active_websockets'][session_id].remove(websocket)
+            print(f"WebSocket removed for session {session_id}")
 
 @app.websocket("/ws/system")
 async def system_websocket(websocket: WebSocket):

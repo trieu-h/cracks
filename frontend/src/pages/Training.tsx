@@ -14,7 +14,7 @@ import {
 const Training: React.FC = () => {
   const [config, setConfig] = useState({
     model_type: 'yolo',
-    model: 'yolo12n-seg.pt',
+    model: 'yolo11n-seg.pt',
     dataset_yaml: '',
     epochs: 100,
     imgsz: 640,
@@ -45,9 +45,17 @@ const Training: React.FC = () => {
   useWebSocket(
     activeSession ? `/ws/training/${activeSession.id}` : null,
     (data) => {
+      console.log('WebSocket message received:', data);
       if (data.type === 'epoch') {
-        setMetrics(prev => [...prev, data.metrics]);
+        console.log('Epoch update:', data.epoch, data.metrics);
+        setMetrics((prev: any[]) => [...prev, data.metrics]);
+        // Update activeSession current_epoch in real-time
+        setActiveSession((prev: any) => prev ? {
+          ...prev,
+          current_epoch: data.epoch
+        } : null);
       } else if (data.type === 'complete') {
+        console.log('Training complete');
         loadSessions();
       }
     }
@@ -110,10 +118,11 @@ const Training: React.FC = () => {
                   onChange={(e) => setConfig({...config, model: e.target.value})}
                   className="input-clean w-full"
                 >
-                  <option value="yolo12n-seg.pt">YOLO12n-seg (Nano)</option>
-                  <option value="yolo12s-seg.pt">YOLO12s-seg (Small)</option>
-                  <option value="yolo12m-seg.pt">YOLO12m-seg (Medium)</option>
-                  <option value="yolo12l-seg.pt">YOLO12l-seg (Large)</option>
+                  <option value="yolo11n-seg.pt">YOLO11n-seg (Nano)</option>
+                  <option value="yolo11s-seg.pt">YOLO11s-seg (Small)</option>
+                  <option value="yolo11m-seg.pt">YOLO11m-seg (Medium)</option>
+                  <option value="yolo11l-seg.pt">YOLO11l-seg (Large)</option>
+                  <option value="yolo11x-seg.pt">YOLO11x-seg (Extra Large)</option>
                 </select>
               </div>
             )}
@@ -179,12 +188,12 @@ const Training: React.FC = () => {
             {/* Control Buttons */}
             <div className="flex gap-3 pt-4">
               {!activeSession ? (
-                <Button primary onClick={handleStart} className="flex-1">
+                <Button primary onClick={handleStart} disabled={!config.dataset_yaml} className="flex-1">
                   <Play size={18} className="inline mr-2" />
                   Start Training
                 </Button>
               ) : (
-                <Button onClick={handleStop} className="flex-1 bg-red-500 hover:bg-red-600 text-white">
+                <Button variant="danger" onClick={handleStop} className="flex-1">
                   <Square size={18} className="inline mr-2" />
                   Stop Training
                 </Button>
