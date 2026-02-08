@@ -73,7 +73,18 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
         results = model.train(**args)
 
         if on_complete:
-            on_complete(session_id, True, str(results.best))
+            # Try to get best checkpoint path, fall back to default location
+            best_path = None
+            if hasattr(results, 'best'):
+                best_path = str(results.best)
+            elif hasattr(results, 'save_dir'):
+                # For segmentation models, checkpoint is in save_dir/weights/best.pt
+                from pathlib import Path
+                best_path = str(Path(results.save_dir) / 'weights' / 'best.pt')
+            else:
+                # Fallback to expected location
+                best_path = f"./checkpoints/{session_id}/weights/best.pt"
+            on_complete(session_id, True, best_path)
 
     except Exception as e:
         print(f"Training error: {e}")
