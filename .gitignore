@@ -14,8 +14,14 @@ ENV/
 
 # Checkpoints and model weights
 backend/checkpoints/
+checkpoints/
+backend/runs/
 *.pt
 *.pth
+
+# Prediction results
+backend/predictions/
+predictions/
 
 # Environment variables
 .env

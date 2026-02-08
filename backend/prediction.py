@@ -7,10 +7,17 @@ from typing import Dict, List
 from pathlib import Path
 
 def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
-    """Simple YOLO prediction."""
+    """Simple YOLO prediction with annotated image."""
     try:
         from ultralytics import YOLO
         import cv2
+        import os
+        import numpy as np
+        
+        print(f"Predicting with model: {model_path}")
+        print(f"Image path: {image_path}")
+        print(f"Model exists: {os.path.exists(model_path)}")
+        print(f"Image exists: {os.path.exists(image_path)}")
         
         # Load model
         model = YOLO(model_path)
@@ -39,12 +46,26 @@ def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
                 
                 detections.append(detection)
         
+        # Generate annotated image
+        annotated_path = None
+        if hasattr(result, 'plot'):
+            # Use YOLO's built-in plot function
+            annotated_img = result.plot()
+            
+            # Save annotated image
+            output_dir = Path('./predictions')
+            output_dir.mkdir(exist_ok=True)
+            annotated_path = output_dir / f"pred_{uuid.uuid4().hex[:8]}.jpg"
+            cv2.imwrite(str(annotated_path), annotated_img)
+            annotated_path = str(annotated_path)
+        
         return {
             'success': True,
             'inference_time': inference_time,
             'model_type': 'yolo',
             'model_path': model_path,
             'image_path': image_path,
+            'annotated_image': annotated_path,
             'num_detections': len(detections),
             'detections': detections
         }

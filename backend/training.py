@@ -114,8 +114,17 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
 
         time.sleep(0.1)  # Simulate training time
 
+    # Create a placeholder checkpoint file so it shows in Models page
+    from pathlib import Path
+    checkpoint_dir = Path('./checkpoints') / session_id / 'weights'
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    best_path = checkpoint_dir / 'best.pt'
+    
+    # Create a dummy file (RF-DETR not implemented yet)
+    best_path.write_text('# RF-DETR model placeholder - not yet implemented')
+    
     if on_complete:
-        on_complete(session_id, True, f"./checkpoints/{session_id}/best.pt")
+        on_complete(session_id, True, str(best_path))
 
 def start_training_session(config: Dict, storage: Dict) -> str:
     """Start a training session and return session ID."""

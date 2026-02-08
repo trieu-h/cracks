@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+export const BASE_URL = API_URL.replace('/api', '');
 
 const api = axios.create({
   baseURL: API_URL,
@@ -22,7 +23,11 @@ export const getTrainingMetrics = (sessionId: string) => api.get(`/training/${se
 export const getTrainingSessions = () => api.get('/training/sessions');
 
 // Prediction
-export const runPrediction = (data: any) => api.post('/prediction', data);
+export const runPrediction = (data: FormData) => api.post('/prediction/upload', data, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
 export const getPrediction = (id: string) => api.get(`/prediction/${id}`);
 
 // Models

@@ -1,9 +1,10 @@
 """
 Main FastAPI application - all routes in one file, simple functions.
 """
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import os
 import json
 from pathlib import Path
@@ -16,6 +17,10 @@ from prediction import run_prediction, predict_yolo
 
 # Create FastAPI app
 app = FastAPI(title="Crack Detection API", version="1.0.0")
+
+# Create predictions directory and mount it for static file serving
+Path('./predictions').mkdir(exist_ok=True)
+app.mount("/predictions", StaticFiles(directory="predictions"), name="predictions")
 
 # CORS - allow frontend to connect
 app.add_middleware(
@@ -179,27 +184,60 @@ def list_training_sessions():
 
 # ===== PREDICTION ENDPOINTS =====
 
-@app.post("/api/prediction")
-def create_prediction(data: dict):
-    """Run prediction on an image."""
-    model_path = data.get('model_path', '')
-    image_path = data.get('image_path', '')
-    model_type = data.get('model_type', 'yolo')
-    conf = data.get('conf', 0.25)
+@app.post("/api/prediction/upload")
+async def create_prediction_upload(
+    request: Request,
+    image: UploadFile = File(...),
+    model_path: str = Form(...),
+    model_type: str = Form('yolo'),
+    conf: float = Form(0.25)
+):
+    """Run prediction on an uploaded image."""
+    from pathlib import Path
+    import shutil
+    
+    print(f"Received prediction request:")
+    print(f"  model_path: {model_path}")
+    print(f"  model_type: {model_type}")
+    print(f"  conf: {conf}")
+    print(f"  image: {image.filename}")
+    
+    if not model_path:
+        return {'success': False, 'error': 'Missing model_path'}
 
-    if not model_path or not image_path:
-        return {'success': False, 'error': 'Missing model_path or image_path'}
-
-    prediction_id = run_prediction(model_path, image_path, model_type, conf, storage)
-
-    # Get result
-    result = storage['predictions'].get(prediction_id, {})
-
-    return {
-        'success': True,
-        'prediction_id': prediction_id,
-        'result': result.get('result', {})
-    }
+    # Save uploaded file temporarily
+    temp_dir = Path('./temp_uploads')
+    temp_dir.mkdir(exist_ok=True)
+    
+    safe_filename = image.filename or 'upload.jpg'
+    temp_path = temp_dir / safe_filename
+    try:
+        with open(temp_path, 'wb') as f:
+            shutil.copyfileobj(image.file, f)
+        
+        print(f"Saved temp file to: {temp_path}")
+        
+        # Run prediction
+        prediction_id = run_prediction(str(model_path), str(temp_path), model_type, float(conf), storage)
+        
+        # Get result
+        result_data = storage['predictions'].get(prediction_id, {})
+        
+        return {
+            'success': True,
+            'prediction_id': prediction_id,
+            'result': result_data.get('result', {})
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error during prediction: {e}")
+        print(traceback.format_exc())
+        return {'success': False, 'error': str(e)}
+    finally:
+        # Clean up temp file
+        if temp_path.exists():
+            temp_path.unlink()
+            print(f"Cleaned up temp file: {temp_path}")
 
 @app.get("/api/prediction/{prediction_id}")
 def get_prediction(prediction_id: str):
@@ -207,8 +245,6 @@ def get_prediction(prediction_id: str):
     if prediction_id in storage['predictions']:
         return storage['predictions'][prediction_id]
     return {'error': 'Prediction not found'}
-
-# ===== MODEL ENDPOINTS =====
 
 @app.get("/api/models")
 def list_models():
