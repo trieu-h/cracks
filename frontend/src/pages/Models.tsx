@@ -7,6 +7,7 @@ import { getModels, deleteModel } from '../api';
 
 const Models: React.FC = () => {
   const [models, setModels] = useState<any[]>([]);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   const loadModels = () => {
     getModels().then(res => setModels(res.data));
@@ -19,16 +20,32 @@ const Models: React.FC = () => {
   const handleDelete = async (modelId: string) => {
     if (!confirm('Are you sure you want to delete this model?')) return;
     
-    try {
-      const res = await deleteModel(modelId);
-      if (res.data.success) {
-        loadModels();
-      } else {
-        alert('Failed to delete model: ' + (res.data.error || 'Unknown error'));
+    // Start delete animation
+    setDeletingIds(prev => new Set(prev).add(modelId));
+    
+    // Wait for animation to complete
+    setTimeout(async () => {
+      try {
+        const res = await deleteModel(modelId);
+        if (res.data.success) {
+          loadModels();
+        } else {
+          alert('Failed to delete model: ' + (res.data.error || 'Unknown error'));
+          setDeletingIds(prev => {
+            const next = new Set(prev);
+            next.delete(modelId);
+            return next;
+          });
+        }
+      } catch (error) {
+        alert('Error deleting model');
+        setDeletingIds(prev => {
+          const next = new Set(prev);
+          next.delete(modelId);
+          return next;
+        });
       }
-    } catch (error) {
-      alert('Error deleting model');
-    }
+    }, 300);
   };
 
   const formatDate = (timestamp: number) => {
@@ -54,7 +71,11 @@ const Models: React.FC = () => {
             models.map(model => (
               <div 
                 key={model.id}
-                className="flex items-center justify-between py-4 px-4 bg-gray-900/50 rounded-lg"
+                className={`flex items-center justify-between py-4 px-4 bg-gray-900/50 rounded-lg transition-all duration-300 ease-out ${
+                  deletingIds.has(model.id) 
+                    ? 'opacity-0 scale-95 -translate-x-4' 
+                    : 'opacity-100 scale-100 translate-x-0'
+                }`}
               >
                 <div className="flex items-start gap-4">
                   <div className="mt-1">
