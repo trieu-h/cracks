@@ -28,6 +28,7 @@ export const getPrediction = (id: string) => api.get(`/prediction/${id}`);
 // Models
 export const getModels = () => api.get('/models');
 export const getModel = (id: string) => api.get(`/models/${id}`);
+export const deleteModel = (id: string) => api.delete(`/models/${id}`);
 
 // System
 export const getGPUStats = () => api.get('/system/gpu');

@@ -19,22 +19,26 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   variant = 'default'
 }) => {
-  const baseClasses = 'inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'btn-clean';
   
-  const variantClasses = {
-    default: 'bg-white border border-paper-200 text-ink-700 hover:bg-paper-50 hover:border-paper-300',
-    primary: 'bg-primary-500 border border-primary-500 text-white hover:bg-primary-600 hover:border-primary-600',
-    ghost: 'text-ink-500 hover:text-ink-700 hover:bg-paper-50',
-    danger: 'bg-red-50 border border-red-200 text-red-600 hover:bg-red-100'
+  const getVariantClasses = () => {
+    if (primary || variant === 'primary') {
+      return 'btn-primary';
+    }
+    if (variant === 'danger') {
+      return 'bg-red-900/20 border-red-800 text-red-400 hover:bg-red-900/30 hover:border-red-700';
+    }
+    if (variant === 'ghost') {
+      return 'bg-transparent border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/50';
+    }
+    return ''; // default btn-clean styling
   };
-
-  const resolvedVariant = primary ? 'primary' : variant;
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${baseClasses} ${variantClasses[resolvedVariant]} ${className}`}
+      className={`${baseClasses} ${getVariantClasses()} ${className}`}
     >
       {icon && <span className="flex-shrink-0">{icon}</span>}
       {children}

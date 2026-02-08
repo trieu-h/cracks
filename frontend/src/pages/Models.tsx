@@ -1,16 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Download, Calendar, HardDrive } from 'lucide-react';
+import { Box, Download, Calendar, HardDrive, Trash2 } from 'lucide-react';
 import { Panel } from '../components/ui/Panel';
 import { Button } from '../components/ui/Button';
 import { LED } from '../components/ui/LED';
-import { getModels } from '../api';
+import { getModels, deleteModel } from '../api';
 
 const Models: React.FC = () => {
   const [models, setModels] = useState<any[]>([]);
 
-  useEffect(() => {
+  const loadModels = () => {
     getModels().then(res => setModels(res.data));
+  };
+
+  useEffect(() => {
+    loadModels();
   }, []);
+
+  const handleDelete = async (modelId: string) => {
+    if (!confirm('Are you sure you want to delete this model?')) return;
+    
+    try {
+      const res = await deleteModel(modelId);
+      if (res.data.success) {
+        loadModels();
+      } else {
+        alert('Failed to delete model: ' + (res.data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error deleting model');
+    }
+  };
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
@@ -24,7 +43,7 @@ const Models: React.FC = () => {
   return (
     <div className="space-y-6">
       <Panel title="Trained Models">
-        <div className="space-y-3">
+        <div className="max-h-[480px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
           {models.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Box size={48} className="mx-auto mb-4 opacity-30" />
@@ -62,15 +81,23 @@ const Models: React.FC = () => {
                   </div>
                 </div>
                 
-                <Button
-                  onClick={() => {
-                    // Trigger download
-                    window.open(`/api/models/${model.id}/download`, '_blank');
-                  }}
-                >
-                  <Download size={18} className="mr-2" />
-                  Download
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => {
+                      // Trigger download
+                      window.open(`/api/models/${model.id}/download`, '_blank');
+                    }}
+                  >
+                    <Download size={18} />
+                    Download
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDelete(model.id)}
+                  >
+                    <Trash2 size={18} />
+                  </Button>
+                </div>
               </div>
             ))
           )}

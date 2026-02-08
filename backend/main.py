@@ -214,38 +214,81 @@ def get_prediction(prediction_id: str):
 def list_models():
     """List trained models."""
     models = []
-    checkpoints_dir = Path('./checkpoints')
+    
+    # Check both possible checkpoint locations
+    checkpoint_dirs = [
+        Path('./checkpoints'),  # Configured location
+        Path('./runs/segment/checkpoints'),  # YOLO default for segmentation
+        Path('./runs/detect/checkpoints'),   # YOLO default for detection
+    ]
+    
+    for checkpoints_dir in checkpoint_dirs:
+        if checkpoints_dir.exists():
+            for session_dir in checkpoints_dir.iterdir():
+                if session_dir.is_dir():
+                    best_path = session_dir / 'weights' / 'best.pt'
+                    if best_path.exists():
+                        # Avoid duplicates if same session exists in multiple locations
+                        session_id = session_dir.name
+                        if not any(m['id'] == session_id for m in models):
+                            models.append({
+                                'id': session_id,
+                                'path': str(best_path),
+                                'name': f"Model {session_id}",
+                                'created': session_dir.stat().st_mtime,
+                                'size': best_path.stat().st_size
+                            })
 
-    if checkpoints_dir.exists():
-        for session_dir in checkpoints_dir.iterdir():
-            if session_dir.is_dir():
-                best_path = session_dir / 'weights' / 'best.pt'
-                if best_path.exists():
-                    models.append({
-                        'id': session_dir.name,
-                        'path': str(best_path),
-                        'name': f"Model {session_dir.name}",
-                        'created': session_dir.stat().st_mtime
-                    })
-
+    # Sort by creation time (newest first)
+    models.sort(key=lambda x: x['created'], reverse=True)
+    
     return models
 
 @app.get("/api/models/{model_id}")
 def get_model(model_id: str):
     """Get model details."""
-    checkpoints_dir = Path('./checkpoints')
-    model_dir = checkpoints_dir / model_id
-
-    if model_dir.exists():
-        best_path = model_dir / 'weights' / 'best.pt'
-        if best_path.exists():
-            return {
-                'id': model_id,
-                'path': str(best_path),
-                'size': best_path.stat().st_size
-            }
+    # Check both possible checkpoint locations
+    checkpoint_dirs = [
+        Path('./checkpoints'),  # Configured location
+        Path('./runs/segment/checkpoints'),  # YOLO default for segmentation
+        Path('./runs/detect/checkpoints'),   # YOLO default for detection
+    ]
+    
+    for checkpoints_dir in checkpoint_dirs:
+        model_dir = checkpoints_dir / model_id
+        if model_dir.exists():
+            best_path = model_dir / 'weights' / 'best.pt'
+            if best_path.exists():
+                return {
+                    'id': model_id,
+                    'path': str(best_path),
+                    'size': best_path.stat().st_size
+                }
 
     return {'error': 'Model not found'}
+
+@app.delete("/api/models/{model_id}")
+def delete_model(model_id: str):
+    """Delete a model and its checkpoint directory."""
+    import shutil
+    
+    # Check both possible checkpoint locations
+    checkpoint_dirs = [
+        Path('./checkpoints'),  # Configured location
+        Path('./runs/segment/checkpoints'),  # YOLO default for segmentation
+        Path('./runs/detect/checkpoints'),   # YOLO default for detection
+    ]
+    
+    for checkpoints_dir in checkpoint_dirs:
+        model_dir = checkpoints_dir / model_id
+        if model_dir.exists():
+            try:
+                shutil.rmtree(model_dir)
+                return {'success': True, 'message': f'Model {model_id} deleted successfully'}
+            except Exception as e:
+                return {'success': False, 'error': str(e)}
+
+    return {'success': False, 'error': 'Model not found'}
 
 # ===== SYSTEM ENDPOINTS =====
 
