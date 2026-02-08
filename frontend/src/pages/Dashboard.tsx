@@ -18,6 +18,15 @@ import { getGPUStats, getTrainingSessions } from '../api';
 const Dashboard: React.FC = () => {
   const [gpuStats, setGpuStats] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
+  // Update current time every minute to refresh training time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useWebSocket('/ws/system', (data) => {
     if (data.type === 'gpu_stats') {
@@ -31,6 +40,18 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const activeSession = sessions.find(s => s.status === 'running');
+
+  // Calculate training time for active session
+  const getTrainingTime = () => {
+    if (!activeSession?.start_time) return '--';
+    const elapsedMs = currentTime - (activeSession.start_time * 1000);
+    const elapsedHours = elapsedMs / (1000 * 60 * 60);
+    if (elapsedHours < 1) {
+      const elapsedMinutes = Math.round(elapsedMs / (1000 * 60));
+      return `${elapsedMinutes}m`;
+    }
+    return `${elapsedHours.toFixed(1)}h`;
+  };
 
   // WebSocket for live training updates
   useWebSocket(
@@ -119,10 +140,10 @@ const Dashboard: React.FC = () => {
             <div className="p-2 rounded-lg bg-rose-900/20">
               <Clock className="w-5 h-5 text-rose-500" />
             </div>
-            <span className="text-xs text-stone-500 font-mono">Avg</span>
+            <span className="text-xs text-stone-500 font-mono">{activeSession ? 'Elapsed' : 'Avg'}</span>
           </div>
           <div className="text-3xl font-serif text-stone-100 mb-1">
-            2.4h
+            {getTrainingTime()}
           </div>
           <div className="text-sm text-stone-500">Training Time</div>
         </div>

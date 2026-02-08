@@ -8,7 +8,8 @@ import {
   startTraining, 
   stopTraining, 
   getDatasets, 
-  getTrainingSessions 
+  getTrainingSessions,
+  getTrainingMetrics
 } from '../api';
 
 const Training: React.FC = () => {
@@ -32,6 +33,19 @@ const Training: React.FC = () => {
     getDatasets().then(res => setDatasets(res.data));
     loadSessions();
   }, []);
+
+  // Load existing metrics when active session changes
+  useEffect(() => {
+    if (activeSession?.id) {
+      getTrainingMetrics(activeSession.id).then(res => {
+        if (res.data && Array.isArray(res.data)) {
+          setMetrics(res.data);
+        }
+      });
+    } else {
+      setMetrics([]);
+    }
+  }, [activeSession?.id]);
 
   const loadSessions = () => {
     getTrainingSessions().then(res => {
