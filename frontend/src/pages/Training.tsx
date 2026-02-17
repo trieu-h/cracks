@@ -22,6 +22,7 @@ const Training: React.FC = () => {
     batch: 16,
     device: '0',
     lr0: 0.01,
+    grad_accum_steps: 4,
   });
   
   const [datasets, setDatasets] = useState<any[]>([]);
@@ -101,7 +102,14 @@ const Training: React.FC = () => {
               <label className="text-sm text-stone-400 mb-2 block">Model Type</label>
               <div className="flex gap-2 p-1 bg-stone-800 rounded-xl">
                 <button
-                  onClick={() => setConfig({...config, model_type: 'yolo'})}
+                  onClick={() => setConfig({
+                    ...config, 
+                    model_type: 'yolo',
+                    model: 'yolo11n-seg.pt',
+                    epochs: 100,
+                    batch: 16,
+                    lr0: 0.01
+                  })}
                   className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                     config.model_type === 'yolo'
                       ? 'bg-green-500 text-stone-950 shadow-lg'
@@ -111,7 +119,14 @@ const Training: React.FC = () => {
                   YOLO
                 </button>
                 <button
-                  onClick={() => setConfig({...config, model_type: 'rfdetr'})}
+                  onClick={() => setConfig({
+                    ...config, 
+                    model_type: 'rfdetr',
+                    model: 'RFDETRSegMedium',
+                    epochs: 10,
+                    batch: 4,
+                    lr0: 0.0001
+                  })}
                   className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                     config.model_type === 'rfdetr'
                       ? 'bg-green-500 text-stone-950 shadow-lg'
@@ -124,7 +139,7 @@ const Training: React.FC = () => {
             </div>
 
             {/* Model Selection */}
-            {config.model_type === 'yolo' && (
+            {config.model_type === 'yolo' ? (
               <div>
                 <label className="text-sm text-stone-500 mb-2 block">YOLO Model</label>
                 <select
@@ -138,6 +153,53 @@ const Training: React.FC = () => {
                   <option value="yolo11l-seg.pt">YOLO11l-seg (Large)</option>
                   <option value="yolo11x-seg.pt">YOLO11x-seg (Extra Large)</option>
                 </select>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-stone-500 mb-2 block">RF-DETR Model (Segmentation)</label>
+                  <select
+                    value={config.model}
+                    onChange={(e) => setConfig({...config, model: e.target.value})}
+                    className="input-clean w-full"
+                  >
+                    <option value="RFDETRSegNano">RF-DETR Seg Nano</option>
+                    <option value="RFDETRSegSmall">RF-DETR Seg Small</option>
+                    <option value="RFDETRSegMedium">RF-DETR Seg Medium</option>
+                    <option value="RFDETRSegLarge">RF-DETR Seg Large</option>
+                    <option value="RFDETRSegXLarge">RF-DETR Seg XLarge</option>
+                    <option value="RFDETRSeg2XLarge">RF-DETR Seg 2XLarge</option>
+                  </select>
+                  <p className="text-xs text-stone-500 mt-1">
+                    All RF-DETR models are configured for instance segmentation
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* RF-DETR Info Panel */}
+            {config.model_type === 'rfdetr' && (
+              <div className="p-4 bg-blue-900/20 border border-blue-800 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <div className="p-1.5 rounded-lg bg-blue-500/20 mt-0.5">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-300 mb-1">RF-DETR Segmentation Model</h4>
+                    <ul className="text-xs text-blue-400/80 space-y-1">
+                      <li>• State-of-the-art transformer-based instance segmentation</li>
+                      <li>• Pixel-level mask prediction for precise object boundaries</li>
+                      <li>• Typically converges in fewer epochs than YOLO (5-20 recommended)</li>
+                      <li>• Requires lower batch size (2-8) due to memory requirements</li>
+                      <li>• Lower learning rate (1e-4) works best</li>
+                    </ul>
+                    <p className="text-xs text-amber-400/80 mt-2 italic">
+                      Note: On macOS with Apple Silicon, RF-DETR will use CPU to avoid compatibility issues.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -178,15 +240,17 @@ const Training: React.FC = () => {
                   className="input-clean w-full"
                 />
               </div>
-              <div>
-                <label className="text-sm text-stone-500 mb-2 block">Image Size</label>
-                <input
-                  type="number"
-                  value={config.imgsz}
-                  onChange={(e) => setConfig({...config, imgsz: parseInt(e.target.value)})}
-                  className="input-clean w-full"
-                />
-              </div>
+              {config.model_type === 'yolo' && (
+                <div>
+                  <label className="text-sm text-stone-500 mb-2 block">Image Size</label>
+                  <input
+                    type="number"
+                    value={config.imgsz}
+                    onChange={(e) => setConfig({...config, imgsz: parseInt(e.target.value)})}
+                    className="input-clean w-full"
+                  />
+                </div>
+              )}
               <div>
                 <label className="text-sm text-stone-500 mb-2 block">Learning Rate</label>
                 <input
@@ -197,6 +261,17 @@ const Training: React.FC = () => {
                   className="input-clean w-full"
                 />
               </div>
+              {config.model_type === 'rfdetr' && (
+                <div>
+                  <label className="text-sm text-stone-500 mb-2 block">Gradient Accumulation</label>
+                  <input
+                    type="number"
+                    value={config.grad_accum_steps}
+                    onChange={(e) => setConfig({...config, grad_accum_steps: parseInt(e.target.value)})}
+                    className="input-clean w-full"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Control Buttons */}
@@ -220,7 +295,7 @@ const Training: React.FC = () => {
         <Panel title="Live Monitor">
           {activeSession ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <LED color="orange" />
                   <span className="font-mono text-green-400">
@@ -246,23 +321,27 @@ const Training: React.FC = () => {
               {metrics.length > 0 && (
                 <div className="space-y-2 font-mono text-sm">
                   <div className="flex justify-between">
-                    <span className="text-stone-500">Box Loss:</span>
+                    <span className="text-stone-500">Loss:</span>
                     <span className="text-green-400">
-                      {metrics[metrics.length - 1].box_loss?.toFixed(4)}
+                      {(metrics[metrics.length - 1].box_loss ?? metrics[metrics.length - 1].loss)?.toFixed(4)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Cls Loss:</span>
-                    <span className="text-green-400">
-                      {metrics[metrics.length - 1].cls_loss?.toFixed(4)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">DFL Loss:</span>
-                    <span className="text-green-400">
-                      {metrics[metrics.length - 1].dfl_loss?.toFixed(4)}
-                    </span>
-                  </div>
+                  {(metrics[metrics.length - 1].cls_loss !== undefined || metrics[metrics.length - 1].class_loss !== undefined) && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Cls Loss:</span>
+                      <span className="text-green-400">
+                        {(metrics[metrics.length - 1].cls_loss ?? metrics[metrics.length - 1].class_loss)?.toFixed(4)}
+                      </span>
+                    </div>
+                  )}
+                  {metrics[metrics.length - 1].dfl_loss > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">DFL Loss:</span>
+                      <span className="text-green-400">
+                        {metrics[metrics.length - 1].dfl_loss?.toFixed(4)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

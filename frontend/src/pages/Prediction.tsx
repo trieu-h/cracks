@@ -152,7 +152,7 @@ const Prediction: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <LED color={result.success && result.result?.success ? 'green' : 'red'} />
                     <span className={`font-mono ${result.success && result.result?.success ? 'text-green-400' : 'text-red-400'}`}>
-                      {result.success && result.result?.success ? 'DETECTED' : 'ERROR'}
+                      {result.success && result.result?.success ? 'SEGMENTED' : 'ERROR'}
                     </span>
                   </div>
                   {result.result?.inference_time && (
@@ -182,8 +182,9 @@ const Prediction: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="mt-4 text-sm text-stone-400 shrink-0">
-                      {result.result.num_detections} objects detected
+                    <div className="mt-4 text-sm text-stone-400 shrink-0 flex items-center justify-between">
+                      <span>{result.result.num_detections} objects segmented</span>
+                      <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">Segmentation</span>
                     </div>
                   </>
                 ) : (
