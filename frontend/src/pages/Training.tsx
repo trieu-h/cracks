@@ -456,6 +456,86 @@ const Training: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Loss Curve Guide */}
+                  <div className="mt-4 p-3 bg-stone-800/40 rounded-lg border border-stone-700/50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <span className="text-sm font-medium text-stone-300">How to Read Loss Curves</span>
+                    </div>
+
+                    {/* Example Curves */}
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      {/* Good Curve Example */}
+                      <div className="bg-stone-900/50 rounded p-2">
+                        <div className="text-xs text-green-400 mb-1 font-medium">✓ Good Training</div>
+                        <svg viewBox="0 0 100 60" className="w-full h-16">
+                          {/* Grid */}
+                          <line x1="10" y1="50" x2="90" y2="50" stroke="#292524" strokeWidth="0.5" />
+                          <line x1="10" y1="10" x2="10" y2="50" stroke="#292524" strokeWidth="0.5" />
+                          {/* Decreasing curve */}
+                          <path 
+                            d="M 10,15 Q 30,25 50,35 T 90,45" 
+                            fill="none" 
+                            stroke="#22c55e" 
+                            strokeWidth="2"
+                          />
+                          {/* Trend arrow */}
+                          <path d="M 75,40 L 85,45 L 75,50" fill="none" stroke="#22c55e" strokeWidth="1.5" />
+                        </svg>
+                        <div className="text-[10px] text-stone-500 mt-1">Loss decreases steadily then plateaus</div>
+                      </div>
+
+                      {/* Bad Curve Example - Overfitting */}
+                      <div className="bg-stone-900/50 rounded p-2">
+                        <div className="text-xs text-red-400 mb-1 font-medium">⚠ Overfitting</div>
+                        <svg viewBox="0 0 100 60" className="w-full h-16">
+                          <line x1="10" y1="50" x2="90" y2="50" stroke="#292524" strokeWidth="0.5" />
+                          <line x1="10" y1="10" x2="10" y2="50" stroke="#292524" strokeWidth="0.5" />
+                          {/* Dips then rises */}
+                          <path 
+                            d="M 10,20 Q 40,40 60,45 T 90,25" 
+                            fill="none" 
+                            stroke="#ef4444" 
+                            strokeWidth="2"
+                          />
+                          <circle cx="90" cy="25" r="2" fill="#ef4444" />
+                        </svg>
+                        <div className="text-[10px] text-stone-500 mt-1">Loss decreases then increases</div>
+                      </div>
+                    </div>
+
+                    {/* Key Indicators */}
+                    <div className="space-y-2 text-xs text-stone-400">
+                      <div className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0" />
+                        <div>
+                          <span className="font-medium text-stone-300">Healthy Training:</span> All loss lines should 
+                          trend downward and eventually flatten out. Small fluctuations are normal.
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                        <div>
+                          <span className="font-medium text-stone-300">Still Learning:</span> If losses are still 
+                          decreasing at the end, consider training for more epochs.
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                        <div>
+                          <span className="font-medium text-stone-300">Overfitting Warning:</span> If loss starts 
+                          increasing after decreasing, the model is memorizing training data. Stop training early.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-stone-700/50 text-[10px] text-stone-500">
+                      Target: Loss should reach below 0.5 for good segmentation results. Lower is better!
+                    </div>
+                  </div>
                 </div>
               )}
 
