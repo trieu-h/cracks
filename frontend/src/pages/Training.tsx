@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Square, RotateCcw } from 'lucide-react';
+import { Play, Square, RotateCcw, Activity } from 'lucide-react';
 import { Panel } from '../components/ui/Panel';
 import { Button } from '../components/ui/Button';
 import { LED } from '../components/ui/LED';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   startTraining, 
   stopTraining, 
@@ -297,10 +298,15 @@ const Training: React.FC = () => {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <LED color="orange" />
-                  <span className="font-mono text-green-400">
-                    Session #{activeSession.id}
-                  </span>
+                  <LED color="orange" pulse />
+                  <div>
+                    <span className="font-mono text-green-400">
+                      Session #{activeSession.id}
+                    </span>
+                    <span className="ml-2 text-xs text-amber-400 animate-pulse">
+                      TRAINING
+                    </span>
+                  </div>
                 </div>
                 <span className="text-sm text-stone-500">
                   {activeSession.current_epoch}/{activeSession.total_epochs} epochs
@@ -317,39 +323,149 @@ const Training: React.FC = () => {
                 />
               </div>
 
-              {/* Metrics */}
+              {/* Loss Chart */}
               {metrics.length > 0 && (
-                <div className="space-y-2 font-mono text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Loss:</span>
-                    <span className="text-green-400">
-                      {(metrics[metrics.length - 1].box_loss ?? metrics[metrics.length - 1].loss)?.toFixed(4)}
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity size={16} className="text-green-400" />
+                    <span className="text-sm font-medium text-stone-300">Loss Curve</span>
+                    <span className="text-xs text-stone-500">
+                      ({metrics.length} epochs recorded)
                     </span>
                   </div>
+                  <div className="h-48 bg-stone-900/50 rounded-lg border border-stone-800 p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={metrics} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#292524" />
+                        <XAxis 
+                          dataKey="epoch" 
+                          stroke="#57534e" 
+                          fontSize={10}
+                          tickLine={false}
+                        />
+                        <YAxis 
+                          stroke="#57534e" 
+                          fontSize={10}
+                          tickLine={false}
+                          domain={['auto', 'auto']}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: '#1c1917', 
+                            border: '1px solid #292524',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                          itemStyle={{ color: '#e7e5e4' }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="box_loss" 
+                          stroke="#22c55e" 
+                          strokeWidth={2}
+                          dot={false}
+                          name="Box Loss"
+                        />
+                        {(metrics[0]?.cls_loss !== undefined || metrics[0]?.class_loss !== undefined) && (
+                          <Line 
+                            type="monotone" 
+                            dataKey={metrics[0]?.cls_loss !== undefined ? "cls_loss" : "class_loss"}
+                            stroke="#3b82f6" 
+                            strokeWidth={2}
+                            dot={false}
+                            name="Cls Loss"
+                          />
+                        )}
+                        {metrics[0]?.dfl_loss > 0 && (
+                          <Line 
+                            type="monotone" 
+                            dataKey="dfl_loss" 
+                            stroke="#f59e0b" 
+                            strokeWidth={2}
+                            dot={false}
+                            name="DFL Loss"
+                          />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Legend */}
+                  <div className="flex gap-4 mt-2 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-0.5 bg-green-500 rounded" />
+                      <span className="text-stone-400">Box Loss</span>
+                    </div>
+                    {(metrics[0]?.cls_loss !== undefined || metrics[0]?.class_loss !== undefined) && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-0.5 bg-blue-500 rounded" />
+                        <span className="text-stone-400">Cls Loss</span>
+                      </div>
+                    )}
+                    {metrics[0]?.dfl_loss > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-0.5 bg-amber-500 rounded" />
+                        <span className="text-stone-400">DFL Loss</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Current Metrics */}
+              {metrics.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-4 p-3 bg-stone-800/30 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-xs text-stone-500 mb-1">Box Loss</div>
+                    <div className="font-mono text-sm text-green-400">
+                      {(metrics[metrics.length - 1].box_loss ?? metrics[metrics.length - 1].loss)?.toFixed(4)}
+                    </div>
+                  </div>
                   {(metrics[metrics.length - 1].cls_loss !== undefined || metrics[metrics.length - 1].class_loss !== undefined) && (
-                    <div className="flex justify-between">
-                      <span className="text-stone-500">Cls Loss:</span>
-                      <span className="text-green-400">
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">Cls Loss</div>
+                      <div className="font-mono text-sm text-blue-400">
                         {(metrics[metrics.length - 1].cls_loss ?? metrics[metrics.length - 1].class_loss)?.toFixed(4)}
-                      </span>
+                      </div>
                     </div>
                   )}
                   {metrics[metrics.length - 1].dfl_loss > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-stone-500">DFL Loss:</span>
-                      <span className="text-green-400">
+                    <div className="text-center">
+                      <div className="text-xs text-stone-500 mb-1">DFL Loss</div>
+                      <div className="font-mono text-sm text-amber-400">
                         {metrics[metrics.length - 1].dfl_loss?.toFixed(4)}
-                      </span>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-48 text-stone-600">
-              <RotateCcw size={48} className="mb-4 opacity-30" />
-              <p>No active training session</p>
-              <p className="text-sm mt-2">Configure and start training to see live metrics</p>
+            <div className="flex flex-col items-center justify-center h-64 text-stone-600">
+              <div className="relative">
+                <RotateCcw size={64} className="mb-4 opacity-20" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-stone-700 rounded-full" />
+                </div>
+              </div>
+              <p className="text-lg font-medium text-stone-500">Ready to Train</p>
+              <p className="text-sm mt-2 text-stone-600 text-center max-w-xs">
+                Configure your model and dataset on the left, then click "Start Training" to begin
+              </p>
+              <div className="mt-6 flex gap-2 text-xs text-stone-700">
+                <span className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  Live metrics
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                  Loss curves
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                  Real-time updates
+                </span>
+              </div>
             </div>
           )}
         </Panel>
