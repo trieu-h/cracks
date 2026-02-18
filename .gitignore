@@ -1,6 +1,7 @@
 # Backend datasets folder
 backend/datasets/
 backend/datasets/*
+backend/datasets copy/*
 
 # Python
 __pycache__/
