@@ -141,19 +141,66 @@ const Training: React.FC = () => {
 
             {/* Model Selection */}
             {config.model_type === 'yolo' ? (
-              <div>
-                <label className="text-sm text-stone-500 mb-2 block">YOLO Model</label>
-                <select
-                  value={config.model}
-                  onChange={(e) => setConfig({...config, model: e.target.value})}
-                  className="input-clean w-full"
-                >
-                  <option value="yolo11n-seg.pt">YOLO11n-seg (Nano)</option>
-                  <option value="yolo11s-seg.pt">YOLO11s-seg (Small)</option>
-                  <option value="yolo11m-seg.pt">YOLO11m-seg (Medium)</option>
-                  <option value="yolo11l-seg.pt">YOLO11l-seg (Large)</option>
-                  <option value="yolo11x-seg.pt">YOLO11x-seg (Extra Large)</option>
-                </select>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-stone-500 mb-2 block">YOLO Model</label>
+                  <select
+                    value={config.model}
+                    onChange={(e) => setConfig({...config, model: e.target.value})}
+                    className="input-clean w-full"
+                  >
+                    <option value="yolo11n-seg.pt">YOLO11n-seg (Nano)</option>
+                    <option value="yolo11s-seg.pt">YOLO11s-seg (Small)</option>
+                    <option value="yolo11m-seg.pt">YOLO11m-seg (Medium)</option>
+                    <option value="yolo11l-seg.pt">YOLO11l-seg (Large)</option>
+                    <option value="yolo11x-seg.pt">YOLO11x-seg (Extra Large)</option>
+                  </select>
+                </div>
+
+                {/* YOLO Best Practices Panel */}
+                <div className="p-4 bg-green-900/20 border border-green-800 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-green-500/20 mt-0.5">
+                      <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-green-300 mb-2">YOLO Training Best Practices</h4>
+                      
+                      <div className="space-y-3 text-xs text-green-400/80">
+                        <div>
+                          <span className="font-semibold text-green-300">Model Size Selection:</span>
+                          <ul className="mt-1 ml-3 space-y-0.5">
+                            <li>• Nano: Fastest, lowest accuracy - good for testing</li>
+                            <li>• Small/Medium: Balance of speed and accuracy</li>
+                            <li>• Large/XLarge: Best accuracy, requires more GPU memory</li>
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <span className="font-semibold text-green-300">Recommended Settings:</span>
+                          <ul className="mt-1 ml-3 space-y-0.5">
+                            <li>• Epochs: 100-300 (segmentation needs more than detection)</li>
+                            <li>• Batch Size: 8-16 (reduce if out of memory)</li>
+                            <li>• Image Size: 640 (standard) or 1280 (higher quality)</li>
+                            <li>• Learning Rate: 0.01 (default works well)</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-green-300">Pro Tips:</span>
+                          <ul className="mt-1 ml-3 space-y-0.5">
+                            <li>• Start with 100 epochs, increase if loss is still decreasing</li>
+                            <li>• Use smaller batches (4-8) for larger models (L/XL)</li>
+                            <li>• Higher image size = better accuracy but slower training</li>
+                            <li>• Monitor the loss curve - should steadily decrease</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
