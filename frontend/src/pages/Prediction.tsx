@@ -1,12 +1,105 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Play, RotateCcw, Image, Video } from 'lucide-react';
+import { Upload, Play, RotateCcw, Image, Video, Camera } from 'lucide-react';
 import { Panel } from '../components/ui/Panel';
 import { Button } from '../components/ui/Button';
 import { LED } from '../components/ui/LED';
 import { runPrediction, runVideoPrediction, getModels, BASE_URL } from '../api';
 
+// Detection overlay component for real-time bounding boxes
+interface DetectionOverlayProps {
+  videoRef: React.RefObject<HTMLVideoElement>;
+  detections: any[];
+  isActive: boolean;
+}
+
+const DetectionOverlay: React.FC<DetectionOverlayProps> = ({ videoRef, detections, isActive }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    if (!isActive || !canvasRef.current || !videoRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return;
+    
+    // Match canvas size to video
+    const resizeCanvas = () => {
+      const rect = video.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    };
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, [isActive, videoRef]);
+  
+  useEffect(() => {
+    if (!canvasRef.current || !videoRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (detections.length === 0) return;
+    
+    // Calculate scale factors
+    const scaleX = canvas.width / video.videoWidth;
+    const scaleY = canvas.height / video.videoHeight;
+    
+    // Draw bounding boxes
+    detections.forEach((det, index) => {
+      const bbox = det.bbox;
+      if (!bbox || bbox.length < 4) return;
+      
+      const x = bbox[0] * scaleX;
+      const y = bbox[1] * scaleY;
+      const width = (bbox[2] - bbox[0]) * scaleX;
+      const height = (bbox[3] - bbox[1]) * scaleY;
+      
+      // Draw box
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, width, height);
+      
+      // Draw label background
+      const label = `${det.class_name || 'crack'} ${(det.confidence * 100).toFixed(0)}%`;
+      ctx.font = 'bold 14px sans-serif';
+      const textMetrics = ctx.measureText(label);
+      const textHeight = 20;
+      
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(x, y - textHeight, textMetrics.width + 10, textHeight);
+      
+      // Draw label text
+      ctx.fillStyle = '#000';
+      ctx.fillText(label, x + 5, y - 5);
+    });
+  }, [detections, videoRef]);
+  
+  if (!isActive) return null;
+  
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none z-10"
+      style={{ width: '100%', height: '100%' }}
+    />
+  );
+};
+
 const Prediction: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'photo' | 'video'>('photo');
+  const [activeTab, setActiveTab] = useState<'photo' | 'video' | 'webcam'>('photo');
   
   // Photo prediction states
   const [imagePath, setImagePath] = useState('');
@@ -19,6 +112,16 @@ const Prediction: React.FC = () => {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [sampleInterval, setSampleInterval] = useState<number>(5);
   
+  // Webcam prediction states
+  const [webcamActive, setWebcamActive] = useState(false);
+  const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
+  const [autoCapture, setAutoCapture] = useState(false);
+  const [captureInterval, setCaptureInterval] = useState<number>(500);
+  const [webcamResult, setWebcamResult] = useState<any>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [detections, setDetections] = useState<any[]>([]);
+  const [fps, setFps] = useState<number>(0);
+  
   // Common states
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [models, setModels] = useState<any[]>([]);
@@ -28,6 +131,9 @@ const Prediction: React.FC = () => {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const webcamVideoRef = useRef<HTMLVideoElement>(null);
+  const webcamCanvasRef = useRef<HTMLCanvasElement>(null);
+  const autoCaptureRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     getModels().then(res => setModels(res.data));
@@ -56,10 +162,130 @@ const Prediction: React.FC = () => {
   const openFilePicker = () => {
     if (activeTab === 'photo') {
       fileInputRef.current?.click();
-    } else {
+    } else if (activeTab === 'video') {
       videoInputRef.current?.click();
     }
   };
+
+  // Webcam functions
+  const startWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false 
+      });
+      setWebcamStream(stream);
+      setWebcamActive(true);
+    } catch (err) {
+      console.error('Error accessing webcam:', err);
+      alert('Could not access webcam. Please ensure you have granted camera permissions.');
+    }
+  };
+
+  // Effect to connect video element to stream
+  useEffect(() => {
+    if (webcamActive && webcamStream && webcamVideoRef.current) {
+      webcamVideoRef.current.srcObject = webcamStream;
+    }
+  }, [webcamActive, webcamStream]);
+
+  const stopWebcam = () => {
+    if (webcamStream) {
+      webcamStream.getTracks().forEach(track => track.stop());
+      setWebcamStream(null);
+    }
+    setWebcamActive(false);
+    if (autoCaptureRef.current) {
+      clearInterval(autoCaptureRef.current);
+      autoCaptureRef.current = null;
+    }
+    setAutoCapture(false);
+    setWebcamResult(null);
+  };
+
+  const captureFromWebcam = async () => {
+    if (!webcamVideoRef.current || !selectedModel || isCapturing) return;
+    
+    setIsCapturing(true);
+    const video = webcamVideoRef.current;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return;
+    
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Convert to blob
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        setIsCapturing(false);
+        return;
+      }
+      
+      const selectedModelData = models.find(m => m.id === selectedModel);
+      const file = new File([blob], `webcam_capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('model_path', selectedModelData?.path || '');
+      formData.append('conf', '0.25');
+      
+      const startTime = performance.now();
+      
+      try {
+        const res = await runPrediction(formData);
+        setWebcamResult(res.data);
+        
+        // Update detections for overlay
+        if (res.data?.success && res.data?.result?.success) {
+          setDetections(res.data.result.detections || []);
+          
+          // Calculate FPS
+          const endTime = performance.now();
+          const inferenceTime = endTime - startTime;
+          setFps(Math.round(1000 / inferenceTime));
+        }
+      } catch (error) {
+        console.error('Prediction failed:', error);
+      } finally {
+        setIsCapturing(false);
+      }
+    }, 'image/jpeg', 0.8);
+  };
+
+  // Auto-capture effect
+  useEffect(() => {
+    if (autoCapture && webcamActive && selectedModel) {
+      autoCaptureRef.current = setInterval(() => {
+        captureFromWebcam();
+      }, captureInterval);
+    } else if (autoCaptureRef.current) {
+      clearInterval(autoCaptureRef.current);
+      autoCaptureRef.current = null;
+    }
+    
+    return () => {
+      if (autoCaptureRef.current) {
+        clearInterval(autoCaptureRef.current);
+        autoCaptureRef.current = null;
+      }
+    };
+  }, [autoCapture, webcamActive, selectedModel, captureInterval]);
+
+  // Cleanup webcam on unmount
+  useEffect(() => {
+    return () => {
+      stopWebcam();
+    };
+  }, []);
 
   const handlePredict = async () => {
     const selectedModelData = models.find(m => m.id === selectedModel);
@@ -84,7 +310,8 @@ const Prediction: React.FC = () => {
           error: 'Failed to run prediction'
         });
       }
-    } else {
+      setLoading(false);
+    } else if (activeTab === 'video') {
       if (!selectedVideo || !selectedModel) return;
 
       setLoading(true);
@@ -105,9 +332,9 @@ const Prediction: React.FC = () => {
           error: 'Failed to run video prediction'
         });
       }
+      setLoading(false);
+      setProgress('');
     }
-    setLoading(false);
-    setProgress('');
   };
 
   return (
@@ -115,7 +342,10 @@ const Prediction: React.FC = () => {
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b border-stone-700 pb-4">
         <button
-          onClick={() => setActiveTab('photo')}
+          onClick={() => {
+            setActiveTab('photo');
+            stopWebcam();
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
             activeTab === 'photo' 
               ? 'bg-stone-700 text-white' 
@@ -126,7 +356,10 @@ const Prediction: React.FC = () => {
           Photo
         </button>
         <button
-          onClick={() => setActiveTab('video')}
+          onClick={() => {
+            setActiveTab('video');
+            stopWebcam();
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
             activeTab === 'video' 
               ? 'bg-stone-700 text-white' 
@@ -136,52 +369,64 @@ const Prediction: React.FC = () => {
           <Video size={18} />
           Video
         </button>
+        <button
+          onClick={() => setActiveTab('webcam')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+            activeTab === 'webcam' 
+              ? 'bg-stone-700 text-white' 
+              : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800'
+          }`}
+        >
+          <Camera size={18} />
+          Webcam
+        </button>
       </div>
 
       {/* Configuration Panel */}
-      <Panel title={`${activeTab === 'photo' ? 'Photo' : 'Video'} Prediction Configuration`}>
-        <div className="grid grid-cols-2 gap-4">
-          {/* Model Selection */}
-          <div>
-            <label className="text-sm text-stone-400 mb-2 block">Select Model</label>
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              className="input-clean w-full"
-            >
-              <option value="">Choose a trained model...</option>
-              {models.map(model => (
-                <option key={model.id} value={model.id}>
-                  {model.name} ({model.id}) - {(model.size / (1024 * 1024)).toFixed(1)} MB
-                </option>
-              ))}
-            </select>
-            {models.length === 0 && (
-              <p className="text-xs text-stone-500 mt-2">
-                No trained models available. Train a model first.
-              </p>
-            )}
-          </div>
-
-          {/* File Upload */}
-          <div>
-            <label className="text-sm text-stone-400 mb-2 block">
-              Select {activeTab === 'photo' ? 'Image' : 'Video'}
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={activeTab === 'photo' ? imagePath : videoPath}
-                readOnly
-                placeholder={`Click Browse to select a ${activeTab}...`}
-                className="input-clean flex-1"
-              />
-              <button
-                onClick={openFilePicker}
-                className="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded-xl text-sm text-stone-200 transition-all"
-                title="Browse files"
+      {activeTab !== 'webcam' && (
+        <Panel title={`${activeTab === 'photo' ? 'Photo' : 'Video'} Prediction Configuration`}>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Model Selection */}
+            <div>
+              <label className="text-sm text-stone-400 mb-2 block">Select Model</label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="input-clean w-full"
               >
-                Browse
+                <option value="">Choose a trained model...</option>
+                {models.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} ({model.id}) - {(model.size / (1024 * 1024)).toFixed(1)} MB
+                  </option>
+                ))}
+              </select>
+              {models.length === 0 && (
+                <p className="text-xs text-stone-500 mt-2">
+                  No trained models available. Train a model first.
+                </p>
+              )}
+            </div>
+
+            {/* File Upload */}
+            <div>
+              <label className="text-sm text-stone-400 mb-2 block">
+                Select {activeTab === 'photo' ? 'Image' : 'Video'}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={activeTab === 'photo' ? imagePath : videoPath}
+                  readOnly
+                  placeholder={`Click Browse to select a ${activeTab}...`}
+                  className="input-clean flex-1"
+                />
+                <button
+                  onClick={openFilePicker}
+                  className="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded-xl text-sm text-stone-200 transition-all"
+                  title="Browse files"
+                >
+                  Browse
               </button>
               <Button 
                 primary 
@@ -239,6 +484,88 @@ const Prediction: React.FC = () => {
           </div>
         </div>
       </Panel>
+      )}
+
+      {/* Webcam Configuration Panel */}
+      {activeTab === 'webcam' && (
+        <Panel title="Webcam Detection Configuration">
+          <div className="flex items-end gap-4">
+            {/* Model Selection */}
+            <div style={{ width: '500px' }}>
+              <label className="text-sm text-stone-400 mb-1 block">Select Model</label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="input-clean w-full"
+              >
+                <option value="">Choose a trained model...</option>
+                {models.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name} ({model.id}) - {(model.size / (1024 * 1024)).toFixed(1)} MB
+                  </option>
+                ))}
+              </select>
+              {models.length === 0 && (
+                <p className="text-xs text-stone-500 mt-1">
+                  No trained models available.
+                </p>
+              )}
+            </div>
+
+            {/* Webcam Control */}
+            <div>
+              <label className="text-sm text-stone-400 mb-1 block">Webcam</label>
+              <div className="flex">
+                {!webcamActive ? (
+                  <Button
+                    primary
+                    onClick={startWebcam}
+                  >
+                    <Camera size={18} className="inline mr-2" />
+                    Start
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={stopWebcam}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Stop
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Auto-Capture */}
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col">
+                <label className="text-sm text-stone-400 mb-1 block">
+                  {captureInterval < 300 ? '🔴 Real-time' : 'Auto'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={autoCapture}
+                    onChange={(e) => setAutoCapture(e.target.checked)}
+                    disabled={!webcamActive}
+                    className="rounded bg-stone-700 border-stone-600"
+                  />
+                  <input
+                    type="number"
+                    min="100"
+                    max="5000"
+                    step="100"
+                    value={captureInterval}
+                    onChange={(e) => setCaptureInterval(parseInt(e.target.value))}
+                    disabled={!webcamActive}
+                    className="input-clean w-14 text-center"
+                  />
+                  <span className="text-sm text-stone-400">ms</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Panel>
+      )}
 
       {/* Photo Prediction Results */}
       {activeTab === 'photo' && imagePreview && (
@@ -414,6 +741,146 @@ const Prediction: React.FC = () => {
           <Video size={64} className="mb-4 opacity-30" />
           <p className="text-lg">Select a video to start</p>
           <p className="text-sm mt-2">Choose a video and click "Browse" to get started</p>
+        </div>
+      )}
+
+      {/* Webcam Detection */}
+      {activeTab === 'webcam' && (
+        <div className="grid grid-cols-2 gap-6" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
+          {/* Left: Live Webcam Feed */}
+          <Panel 
+            title={`Live Webcam ${fps > 0 ? `(${fps} FPS)` : ''}`} 
+            className="h-full flex flex-col"
+          >
+            <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0 relative">
+              {webcamActive ? (
+                <>
+                  <video
+                    ref={webcamVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Overlay canvas for real-time bounding boxes */}
+                  <DetectionOverlay 
+                    videoRef={webcamVideoRef}
+                    detections={detections}
+                    isActive={webcamActive}
+                  />
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-stone-500">
+                  <Camera size={64} className="mb-4 opacity-30" />
+                  <p>Webcam is off</p>
+                  <p className="text-sm mt-2">Click "Start Webcam" to begin</p>
+                </div>
+              )}
+              
+              {/* Hidden canvas for frame capture */}
+              <canvas ref={webcamCanvasRef} className="hidden" />
+            </div>
+            
+            {/* Capture Button */}
+            {webcamActive && (
+              <div className="mt-4 flex justify-center gap-2">
+                {!autoCapture && (
+                  <Button
+                    primary
+                    onClick={captureFromWebcam}
+                    disabled={isCapturing || !selectedModel}
+                  >
+                    {isCapturing ? (
+                      <>
+                        <RotateCcw size={18} className="inline mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Camera size={18} className="inline mr-2" />
+                        Capture & Detect
+                      </>
+                    )}
+                  </Button>
+                )}
+                {autoCapture && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-green-900/30 rounded-lg">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-sm text-green-400">
+                      Real-time detection active ({captureInterval}ms)
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </Panel>
+
+          {/* Right: Detection Result */}
+          <Panel title="Detection Results" className="h-full flex flex-col">
+            {webcamResult ? (
+              <div className="h-full flex flex-col min-h-0">
+                <div className="flex items-center justify-between mb-4 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <LED color={webcamResult.success && webcamResult.result?.success ? 'green' : 'red'} />
+                    <span className={`font-mono ${webcamResult.success && webcamResult.result?.success ? 'text-green-400' : 'text-red-400'}`}>
+                      {webcamResult.success && webcamResult.result?.success ? 'DETECTED' : 'ERROR'}
+                    </span>
+                  </div>
+                  {webcamResult.result?.inference_time && (
+                    <span className="text-xs text-stone-500">
+                      {(webcamResult.result.inference_time * 1000).toFixed(0)}ms
+                    </span>
+                  )}
+                </div>
+
+                {webcamResult.success && webcamResult.result?.success ? (
+                  <>
+                    {webcamResult.result.annotated_image ? (
+                      <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0">
+                        <img
+                          src={`${BASE_URL}/predictions/${webcamResult.result.annotated_image.split('/').pop()}`}
+                          alt="Detection Result"
+                          className="max-w-full max-h-full object-contain"
+                          onError={(e) => {
+                            console.error('Failed to load image:', e);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center text-stone-500 min-h-0">
+                        No detection result available
+                      </div>
+                    )}
+
+                    <div className="mt-4 text-sm text-stone-400 shrink-0 flex items-center justify-between">
+                      <span>{webcamResult.result.num_detections} cracks detected</span>
+                      <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">
+                        {autoCapture ? 'Auto-capturing' : 'Manual capture'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-red-400 min-h-0">
+                    {webcamResult.result?.error || webcamResult.error || 'Detection failed'}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-stone-500 min-h-0">
+                <Camera size={48} className="mb-4 opacity-30" />
+                <p>Ready to detect cracks</p>
+                <p className="text-sm mt-2">
+                  {autoCapture 
+                    ? captureInterval < 300 
+                      ? '🔴 Real-time mode: Detections appear with bounding boxes on live feed'
+                      : 'Auto-capturing enabled - results appear here with live overlay'
+                    : 'Click "Capture & Detect" or enable auto-capture for real-time detection'
+                  }
+                </p>
+              </div>
+            )}
+          </Panel>
         </div>
       )}
     </div>
