@@ -14,6 +14,7 @@ from storage import get_storage, storage
 from gpu_monitor import get_gpu_stats, monitor_gpu
 from training import start_training_session, stop_training_session
 from prediction import run_prediction, predict_yolo
+from video_prediction import run_video_prediction
 
 # Create FastAPI app
 app = FastAPI(title="Crack Detection API", version="1.0.0")
@@ -239,12 +240,79 @@ async def create_prediction_upload(
             temp_path.unlink()
             print(f"Cleaned up temp file: {temp_path}")
 
+
+@app.post("/api/prediction/video")
+async def create_video_prediction(
+    request: Request,
+    video: UploadFile = File(...),
+    model_path: str = Form(...),
+    model_type: str = Form('yolo'),
+    conf: float = Form(0.25),
+    sample_interval: int = Form(1)
+):
+    """Run prediction on an uploaded video."""
+    from pathlib import Path
+    import shutil
+    
+    print(f"Received video prediction request:")
+    print(f"  model_path: {model_path}")
+    print(f"  model_type: {model_type}")
+    print(f"  conf: {conf}")
+    print(f"  sample_interval: {sample_interval}")
+    print(f"  video: {video.filename}")
+    
+    if not model_path:
+        return {'success': False, 'error': 'Missing model_path'}
+
+    # Save uploaded file temporarily
+    temp_dir = Path('./temp_uploads')
+    temp_dir.mkdir(exist_ok=True)
+    
+    safe_filename = video.filename or 'upload.mp4'
+    temp_path = temp_dir / safe_filename
+    try:
+        with open(temp_path, 'wb') as f:
+            shutil.copyfileobj(video.file, f)
+        
+        print(f"Saved temp video to: {temp_path}")
+        
+        # Run video prediction
+        prediction_id = run_video_prediction(
+            str(model_path), 
+            str(temp_path), 
+            model_type, 
+            float(conf), 
+            int(sample_interval),
+            storage
+        )
+        
+        # Get result
+        result_data = storage['predictions'].get(prediction_id, {})
+        
+        return {
+            'success': True,
+            'prediction_id': prediction_id,
+            'result': result_data.get('result', {})
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error during video prediction: {e}")
+        print(traceback.format_exc())
+        return {'success': False, 'error': str(e)}
+    finally:
+        # Clean up temp file
+        if temp_path.exists():
+            temp_path.unlink()
+            print(f"Cleaned up temp video file: {temp_path}")
+
+
 @app.get("/api/prediction/{prediction_id}")
 def get_prediction(prediction_id: str):
     """Get prediction result."""
     if prediction_id in storage['predictions']:
         return storage['predictions'][prediction_id]
     return {'error': 'Prediction not found'}
+
 
 @app.get("/api/models")
 def list_models():

@@ -28,6 +28,11 @@ export const runPrediction = (data: FormData) => api.post('/prediction/upload', 
     'Content-Type': 'multipart/form-data',
   },
 });
+export const runVideoPrediction = (data: FormData) => api.post('/prediction/video', data, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
 export const getPrediction = (id: string) => api.get(`/prediction/${id}`);
 
 // Models
