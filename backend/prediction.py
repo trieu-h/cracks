@@ -33,11 +33,26 @@ def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
         detections = []
         if result.boxes is not None:
             for i, box in enumerate(result.boxes):
+                bbox_list = box.xyxy.tolist()[0] if len(box.xyxy) > 0 else []
+                area = 0.0
+                if len(bbox_list) == 4:
+                    width = bbox_list[2] - bbox_list[0]
+                    height = bbox_list[3] - bbox_list[1]
+                    area = width * height
+
+                severity = "Low"
+                if area > 50000:
+                    severity = "High"
+                elif area > 10000:
+                    severity = "Medium"
+
                 detection = {
                     'class_id': int(box.cls),
                     'class_name': result.names[int(box.cls)],
                     'confidence': float(box.conf),
-                    'bbox': box.xyxy.tolist()[0] if len(box.xyxy) > 0 else []
+                    'bbox': bbox_list,
+                    'area': area,
+                    'severity': severity
                 }
                 
                 # Add segmentation mask if available
@@ -57,7 +72,7 @@ def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
             output_dir.mkdir(exist_ok=True)
             annotated_path = output_dir / f"pred_{uuid.uuid4().hex[:8]}.jpg"
             cv2.imwrite(str(annotated_path), annotated_img)
-            annotated_path = str(annotated_path)
+            annotated_path = annotated_path.as_posix()  # Use forward slashes for Windows compatibility
         
         return {
             'success': True,
@@ -136,11 +151,26 @@ def predict_rfdetr(model_path: str, image_path: str, conf: float = 0.25) -> Dict
                 print(f"Found segmentation masks: {len(masks)} objects")
             
             for i in range(len(boxes)):
+                bbox_list = boxes[i].tolist() if hasattr(boxes[i], 'tolist') else list(boxes[i])
+                area = 0.0
+                if len(bbox_list) == 4:
+                    width = bbox_list[2] - bbox_list[0]
+                    height = bbox_list[3] - bbox_list[1]
+                    area = width * height
+
+                severity = "Low"
+                if area > 50000:
+                    severity = "High"
+                elif area > 10000:
+                    severity = "Medium"
+
                 detection = {
                     'class_id': int(class_ids[i]) if i < len(class_ids) else 0,
                     'class_name': f"class_{int(class_ids[i])}" if i < len(class_ids) else "unknown",
                     'confidence': float(confidences[i]) if i < len(confidences) else 0.5,
-                    'bbox': boxes[i].tolist() if hasattr(boxes[i], 'tolist') else list(boxes[i])
+                    'bbox': bbox_list,
+                    'area': area,
+                    'severity': severity
                 }
                 
                 # Always add mask for segmentation
@@ -193,7 +223,7 @@ def predict_rfdetr(model_path: str, image_path: str, conf: float = 0.25) -> Dict
             output_dir.mkdir(exist_ok=True)
             annotated_path = output_dir / f"pred_{uuid.uuid4().hex[:8]}.jpg"
             cv2.imwrite(str(annotated_path), img_array)
-            annotated_path = str(annotated_path)
+            annotated_path = annotated_path.as_posix()  # Use forward slashes for Windows compatibility
         except Exception as annot_error:
             print(f"Error creating annotation: {annot_error}")
         

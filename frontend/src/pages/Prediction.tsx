@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Play, RotateCcw, Image, Video, Camera } from 'lucide-react';
+import { Upload, Play, RotateCcw, Image, Video, Camera, Download, AlertTriangle } from 'lucide-react';
 import { Panel } from '../components/ui/Panel';
 import { Button } from '../components/ui/Button';
 import { LED } from '../components/ui/LED';
@@ -58,7 +58,7 @@ const DetectionOverlay: React.FC<DetectionOverlayProps> = ({ videoRef, detection
     const scaleY = canvas.height / video.videoHeight;
     
     // Draw bounding boxes
-    detections.forEach((det, index) => {
+    detections.forEach((det) => {
       const bbox = det.bbox;
       if (!bbox || bbox.length < 4) return;
       
@@ -133,7 +133,7 @@ const Prediction: React.FC = () => {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const webcamVideoRef = useRef<HTMLVideoElement>(null);
   const webcamCanvasRef = useRef<HTMLCanvasElement>(null);
-  const autoCaptureRef = useRef<NodeJS.Timeout | null>(null);
+  const autoCaptureRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     getModels().then(res => setModels(res.data));
@@ -602,16 +602,29 @@ const Prediction: React.FC = () => {
                 {result.success && result.result?.success ? (
                   <>
                     {result.result.annotated_image ? (
-                      <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0">
-                        <img 
-                          src={`${BASE_URL}/predictions/${result.result.annotated_image.split('/').pop()}`}
-                          alt="Detection Result"
-                          className="max-w-full max-h-full object-contain"
-                          onError={(e) => {
-                            console.error('Failed to load image:', e);
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
+                      <div className="flex-1 flex flex-col min-h-0 relative group">
+                        <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 relative">
+                          <img 
+                            src={`${BASE_URL}/predictions/${result.result.annotated_image.replace(/\\/g, '/').split('/').pop()}`}
+                            alt="Detection Result"
+                            className="max-w-full max-h-full object-contain"
+                            onError={(e) => {
+                              console.error('Failed to load image:', e);
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <a 
+                            href={`${BASE_URL}/predictions/${result.result.annotated_image.replace(/\\/g, '/').split('/').pop()}`}
+                            download={`predicted_${result.result.annotated_image.replace(/\\/g, '/').split('/').pop()}`}
+                            className="absolute bottom-4 right-4 bg-stone-800/80 hover:bg-stone-700 text-stone-200 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 backdrop-blur-sm shadow-lg border border-stone-600"
+                            title="Download Image"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download size={16} />
+                            <span className="text-xs font-medium">Download</span>
+                          </a>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex-1 flex items-center justify-center text-stone-500 min-h-0">
@@ -619,9 +632,43 @@ const Prediction: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="mt-4 text-sm text-stone-400 shrink-0 flex items-center justify-between">
-                      <span>{result.result.num_detections} objects segmented</span>
-                      <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">Segmentation</span>
+                    <div className="mt-4 shrink-0">
+                      <div className="flex items-center justify-between text-sm text-stone-400 mb-2">
+                        <span>{result.result.num_detections} objects detected</span>
+                        <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">Analysis</span>
+                      </div>
+                      
+                      {result.result.num_detections > 0 && result.result.detections && (
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="bg-stone-800/50 p-2 rounded flex flex-col">
+                            <span className="text-stone-500">Average Confidence:</span>
+                            <span className="text-stone-300">
+                              {(result.result.detections.reduce((acc: number, d: any) => acc + d.confidence, 0) / result.result.num_detections * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="bg-stone-800/50 p-2 rounded flex flex-col">
+                            <span className="text-stone-500">Total Crack Area:</span>
+                            <span className="text-stone-300">
+                              {result.result.detections.reduce((acc: number, d: any) => acc + (d.area || 0), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} px²
+                            </span>
+                          </div>
+                          <div className="bg-stone-800/50 p-2 rounded flex flex-col col-span-2">
+                            <span className="text-stone-500 mb-1">Severity Breakdown:</span>
+                            <div className="flex gap-4">
+                              <span className="text-red-400 flex items-center gap-1">
+                                <AlertTriangle size={10} />
+                                {result.result.detections.filter((d: any) => d.severity === 'High').length} High
+                              </span>
+                              <span className="text-yellow-400">
+                                {result.result.detections.filter((d: any) => d.severity === 'Medium').length} Medium
+                              </span>
+                              <span className="text-stone-400">
+                                {result.result.detections.filter((d: any) => d.severity === 'Low').length} Low
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -671,12 +718,23 @@ const Prediction: React.FC = () => {
                 {result.success && result.result?.success ? (
                   <>
                     {result.result.annotated_video ? (
-                      <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0">
+                      <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0 relative group">
                         <video 
-                          src={`${BASE_URL}/predictions/${result.result.annotated_video.split('/').pop()}`}
+                          src={`${BASE_URL}/predictions/${result.result.annotated_video.replace(/\\/g, '/').split('/').pop()}`}
                           controls
                           className="max-w-full max-h-full"
                         />
+                        <a 
+                          href={`${BASE_URL}/predictions/${result.result.annotated_video.replace(/\\/g, '/').split('/').pop()}`}
+                          download={`predicted_${result.result.annotated_video.replace(/\\/g, '/').split('/').pop()}`}
+                          className="absolute bottom-4 right-4 bg-stone-800/80 hover:bg-stone-700 text-stone-200 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 backdrop-blur-sm shadow-lg border border-stone-600 z-10"
+                          title="Download Video"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Download size={16} />
+                          <span className="text-xs font-medium">Download</span>
+                        </a>
                       </div>
                     ) : (
                       <div className="flex-1 flex items-center justify-center text-stone-500 min-h-0">

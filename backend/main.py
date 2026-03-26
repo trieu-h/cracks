@@ -174,13 +174,22 @@ def list_training_sessions():
     """List all training sessions."""
     sessions = []
     for sid, session in storage['training_sessions'].items():
+        # Get latest metrics
+        latest_metrics = session['metrics'][-1] if session['metrics'] else {}
+        
         sessions.append({
             'id': sid,
             'status': session['status'],
             'current_epoch': session['current_epoch'],
             'total_epochs': session['total_epochs'],
-            'model_type': session['config'].get('model_type', 'yolo')
+            'model_type': session['config'].get('model_type', 'yolo'),
+            'start_time': session.get('start_time'),
+            'config': session.get('config', {}),
+            'latest_metrics': latest_metrics,
+            'all_metrics': session.get('metrics', [])
         })
+    # Sort by start time if available
+    sessions.sort(key=lambda x: x.get('start_time', 0), reverse=True)
     return sessions
 
 # ===== PREDICTION ENDPOINTS =====
@@ -313,6 +322,13 @@ def get_prediction(prediction_id: str):
         return storage['predictions'][prediction_id]
     return {'error': 'Prediction not found'}
 
+@app.get("/api/predictions")
+def list_predictions():
+    """List all predictions."""
+    predictions = list(storage['predictions'].values())
+    predictions.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+    return predictions
+
 
 @app.get("/api/models")
 def list_models():
@@ -330,14 +346,27 @@ def list_models():
         if checkpoints_dir.exists():
             for session_dir in checkpoints_dir.iterdir():
                 if session_dir.is_dir():
-                    best_path = session_dir / 'weights' / 'best.pt'
-                    if best_path.exists():
-                        # Avoid duplicates if same session exists in multiple locations
-                        session_id = session_dir.name
+                    session_id = session_dir.name
+                    best_path = None
+
+                    # Option 1: standard structure <session>/weights/*.pt
+                    weights_dir = session_dir / 'weights'
+                    if weights_dir.exists():
+                        pt_files = list(weights_dir.glob('*.pt'))
+                        if pt_files:
+                            best_path = pt_files[0]
+
+                    # Option 2: .pt files placed directly in <session>/*.pt
+                    if best_path is None:
+                        pt_files = list(session_dir.glob('*.pt'))
+                        if pt_files:
+                            best_path = pt_files[0]
+
+                    if best_path is not None:
                         if not any(m['id'] == session_id for m in models):
                             models.append({
                                 'id': session_id,
-                                'path': str(best_path),
+                                'path': best_path.as_posix(),  # Forward slashes for Windows
                                 'name': f"Model {session_id}",
                                 'created': session_dir.stat().st_mtime,
                                 'size': best_path.stat().st_size
@@ -361,13 +390,16 @@ def get_model(model_id: str):
     for checkpoints_dir in checkpoint_dirs:
         model_dir = checkpoints_dir / model_id
         if model_dir.exists():
-            best_path = model_dir / 'weights' / 'best.pt'
-            if best_path.exists():
-                return {
-                    'id': model_id,
-                    'path': str(best_path),
-                    'size': best_path.stat().st_size
-                }
+            weights_dir = model_dir / 'weights'
+            if weights_dir.exists():
+                pt_files = list(weights_dir.glob('*.pt'))
+                if pt_files:
+                    best_path = pt_files[0]
+                    return {
+                        'id': model_id,
+                        'path': str(best_path),
+                        'size': best_path.stat().st_size
+                    }
 
     return {'error': 'Model not found'}
 
