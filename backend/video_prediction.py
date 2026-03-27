@@ -253,7 +253,7 @@ def run_video_prediction(
             'model_type': model_type,
             'model_path': model_path,
             'video_path': video_path,
-            'annotated_video': str(annotated_video_path),
+            'annotated_video': Path(annotated_video_path).as_posix(),  # Forward slashes for Windows compatibility
             'total_frames': total_frames,
             'processed_frames': len(frame_paths),
             'sample_interval': sample_interval,

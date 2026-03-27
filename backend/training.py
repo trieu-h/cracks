@@ -54,12 +54,37 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
                     return float(val.item())
                 return float(val) if val is not None else 0.0
             
+            # Basic losses
             metrics = {
                 'epoch': epoch,
                 'box_loss': to_float(trainer.loss_items[0]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 0 else 0.0,
                 'cls_loss': to_float(trainer.loss_items[1]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 1 else 0.0,
                 'dfl_loss': to_float(trainer.loss_items[2]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 2 else 0.0,
             }
+            
+            # Detailed metrics from validator if available
+            if hasattr(trainer, 'validator') and hasattr(trainer.validator, 'metrics'):
+                val_metrics = trainer.validator.metrics
+                # For segmentation models, prefer mask metrics suffix (M)
+                # For detection, use (B)
+                suffix = '(M)' if 'segment' in str(type(trainer)).lower() else '(B)'
+                
+                results_dict = val_metrics.results_dict if hasattr(val_metrics, 'results_dict') else {}
+                
+                metrics.update({
+                    'precision': to_float(results_dict.get(f'metrics/precision{suffix}', 0.0)),
+                    'recall': to_float(results_dict.get(f'metrics/recall{suffix}', 0.0)),
+                    'mAP50': to_float(results_dict.get(f'metrics/mAP50{suffix}', 0.0)),
+                    'mAP50_95': to_float(results_dict.get(f'metrics/mAP50-95{suffix}', 0.0)),
+                    'fitness': to_float(val_metrics.fitness) if hasattr(val_metrics, 'fitness') else 0.0
+                })
+                
+                # Calculate F1 if not provided
+                if metrics['precision'] + metrics['recall'] > 0:
+                    metrics['f1'] = 2 * (metrics['precision'] * metrics['recall']) / (metrics['precision'] + metrics['recall'])
+                else:
+                    metrics['f1'] = 0.0
+
             print(f"Metrics: {metrics}")
 
             if on_epoch_end:

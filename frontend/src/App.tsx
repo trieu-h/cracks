@@ -6,6 +6,7 @@ import Prediction from './pages/Prediction';
 import Datasets from './pages/Datasets';
 import Models from './pages/Models';
 import Settings from './pages/Settings';
+import Evaluation from './pages/Evaluation';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/training" element={<Training />} />
         <Route path="/prediction" element={<Prediction />} />
+        <Route path="/evaluation" element={<Evaluation />} />
         <Route path="/datasets" element={<Datasets />} />
         <Route path="/models" element={<Models />} />
         <Route path="/settings" element={<Settings />} />

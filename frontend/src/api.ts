@@ -34,6 +34,7 @@ export const runVideoPrediction = (data: FormData) => api.post('/prediction/vide
   },
 });
 export const getPrediction = (id: string) => api.get(`/prediction/${id}`);
+export const getPredictions = () => api.get('/predictions');
 
 // Models
 export const getModels = () => api.get('/models');

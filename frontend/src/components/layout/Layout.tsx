@@ -7,7 +7,8 @@ import {
   Database, 
   Box, 
   Settings,
-  Layers
+  Layers,
+  LineChart
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -18,6 +19,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/training', label: 'Training', icon: Play },
   { path: '/prediction', label: 'Prediction', icon: Image },
+  { path: '/evaluation', label: 'Evaluation', icon: LineChart },
   { path: '/datasets', label: 'Datasets', icon: Database },
   { path: '/models', label: 'Models', icon: Box },
   { path: '/settings', label: 'Settings', icon: Settings },
