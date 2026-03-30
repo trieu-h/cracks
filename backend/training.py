@@ -19,6 +19,7 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
         # Load model
         model = YOLO("./models/" + config.get('model', 'yolo11n-seg.pt'))
         device = "0" if torch.cuda.is_available() else "cpu"
+        torch.cuda.empty_cache();
 
         # Training arguments
         args = {
