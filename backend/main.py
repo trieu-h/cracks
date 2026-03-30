@@ -10,11 +10,12 @@ import json
 from pathlib import Path
 
 # Import our simple modules
-from storage import get_storage, storage
+from storage import get_storage, storage, init_storage, save_dataset_to_db, delete_dataset_from_db
 from gpu_monitor import get_gpu_stats, monitor_gpu
 from training import start_training_session, stop_training_session
 from prediction import run_prediction, predict_yolo
 from video_prediction import run_video_prediction
+from database import init_db
 
 # Create FastAPI app
 app = FastAPI(title="Crack Detection API", version="1.0.0")
@@ -35,8 +36,15 @@ app.add_middleware(
 # Start GPU monitoring on startup
 @app.on_event("startup")
 async def startup_event():
-    """Start GPU monitoring when server starts."""
+    """Initialize database and start GPU monitoring when server starts."""
     import asyncio
+    
+    # Initialize SQLite database
+    init_db()
+    
+    # Load datasets from database into memory
+    init_storage()
+    
     # Store the event loop for WebSocket broadcasts from training threads
     storage['event_loop'] = asyncio.get_running_loop()
     print(f"Stored event loop: {storage['event_loop']}")
@@ -99,7 +107,7 @@ def import_dataset(data: dict):
         print(f"train_images: {train_images}\n val_images: {val_images}\n test_images: {test_images}\n")
 
         # Store dataset info
-        storage['datasets'][dataset_id] = {
+        dataset_info = {
             'id': dataset_id,
             'path': str(path),
             'yaml_path': str(yaml_path),
@@ -110,8 +118,13 @@ def import_dataset(data: dict):
             'val_images': val_images,
             'test_images': test_images
         }
-
-        return {'success': True, 'dataset': storage['datasets'][dataset_id]}
+        
+        # Save to database and memory
+        success = save_dataset_to_db(dataset_info)
+        if success:
+            return {'success': True, 'dataset': dataset_info}
+        else:
+            return {'success': False, 'error': 'Failed to save dataset to database'}
 
     except Exception as e:
         return {'success': False, 'error': str(e)}
@@ -125,9 +138,9 @@ def get_dataset(dataset_id: str):
 
 @app.delete("/api/datasets/{dataset_id}")
 def delete_dataset(dataset_id: str):
-    """Delete a dataset from storage."""
-    if dataset_id in storage['datasets']:
-        del storage['datasets'][dataset_id]
+    """Delete a dataset from storage and database."""
+    success = delete_dataset_from_db(dataset_id)
+    if success:
         return {'success': True}
     return {'success': False, 'error': 'Dataset not found'}
 
