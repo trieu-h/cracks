@@ -171,6 +171,18 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
         checkpoint_dir = Path('./checkpoints') / session_id
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
+        # Clear RF-DETR output directory to prevent loading incompatible checkpoints
+        # from different model variants (e.g., XLarge checkpoints loaded by Medium model)
+        rfdetr_output_dir = Path('./output')
+        if rfdetr_output_dir.exists():
+            print(f"Clearing RF-DETR output directory: {rfdetr_output_dir}")
+            for pth_file in rfdetr_output_dir.glob('*.pth'):
+                try:
+                    pth_file.unlink()
+                    print(f"  Removed: {pth_file.name}")
+                except Exception as e:
+                    print(f"  Warning: Could not remove {pth_file.name}: {e}")
+
         # Training history for callbacks
         history = []
 
