@@ -112,6 +112,9 @@ const Prediction: React.FC = () => {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [sampleInterval, setSampleInterval] = useState<number>(5);
   
+  // Confidence threshold state (0-100)
+  const [confidenceThreshold, setConfidenceThreshold] = useState<number>(50);
+  
   // Webcam prediction states
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
@@ -236,7 +239,7 @@ const Prediction: React.FC = () => {
       const formData = new FormData();
       formData.append('image', file);
       formData.append('model_path', selectedModelData?.path || '');
-      formData.append('conf', '0.25');
+      formData.append('conf', (confidenceThreshold / 100).toString());
       
       const startTime = performance.now();
       
@@ -299,7 +302,7 @@ const Prediction: React.FC = () => {
       const formData = new FormData();
       formData.append('image', selectedFile);
       formData.append('model_path', selectedModelData?.path || '');
-      formData.append('conf', '0.25');
+      formData.append('conf', (confidenceThreshold / 100).toString());
 
       try {
         const res = await runPrediction(formData);
@@ -320,7 +323,7 @@ const Prediction: React.FC = () => {
       const formData = new FormData();
       formData.append('video', selectedVideo);
       formData.append('model_path', selectedModelData?.path || '');
-      formData.append('conf', '0.25');
+      formData.append('conf', (confidenceThreshold / 100).toString());
       formData.append('sample_interval', sampleInterval.toString());
 
       try {
@@ -385,9 +388,9 @@ const Prediction: React.FC = () => {
       {/* Configuration Panel */}
       {activeTab !== 'webcam' && (
         <Panel title={`${activeTab === 'photo' ? 'Photo' : 'Video'} Prediction Configuration`}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-end gap-4 flex-wrap">
             {/* Model Selection */}
-            <div>
+            <div style={{ minWidth: '250px', flex: '1 1 250px' }}>
               <label className="text-sm text-stone-400 mb-2 block">Select Model</label>
               <select
                 value={selectedModel}
@@ -409,7 +412,7 @@ const Prediction: React.FC = () => {
             </div>
 
             {/* File Upload */}
-            <div>
+            <div style={{ minWidth: '300px', flex: '2 1 300px' }}>
               <label className="text-sm text-stone-400 mb-2 block">
                 Select {activeTab === 'photo' ? 'Image' : 'Video'}
               </label>
@@ -427,7 +430,31 @@ const Prediction: React.FC = () => {
                   title="Browse files"
                 >
                   Browse
-              </button>
+                </button>
+              </div>
+            </div>
+
+            {/* Confidence Threshold Slider */}
+            <div style={{ minWidth: '200px', flex: '1 1 200px' }}>
+              <label className="text-sm text-stone-400 mb-2 block">Confidence Threshold</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={confidenceThreshold}
+                onChange={(e) => setConfidenceThreshold(parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-stone-500 mt-1">
+                <span>0%</span>
+                <span>{confidenceThreshold}%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            {/* Run Prediction Button */}
+            <div>
+              <label className="text-sm text-stone-400 mb-2 block opacity-0">Action</label>
               <Button 
                 primary 
                 onClick={handlePredict} 
@@ -446,8 +473,12 @@ const Prediction: React.FC = () => {
                 )}
               </Button>
             </div>
+          </div>
+
+          {/* Secondary Controls Row */}
+          <div className="flex gap-4 mt-4 flex-wrap">
             {activeTab === 'video' && (
-              <div className="mt-2">
+              <div style={{ minWidth: '300px', flex: '1 1 300px' }}>
                 <label className="text-xs text-stone-400">Frame Sample Interval (lower = more accurate but slower)</label>
                 <input
                   type="range"
@@ -467,23 +498,23 @@ const Prediction: React.FC = () => {
             {progress && (
               <p className="text-xs text-blue-400 mt-2 animate-pulse">{progress}</p>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <input
-              ref={videoInputRef}
-              type="file"
-              accept="video/*"
-              onChange={handleVideoSelect}
-              className="hidden"
-            />
           </div>
-        </div>
-      </Panel>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleVideoSelect}
+            className="hidden"
+          />
+        </Panel>
       )}
 
       {/* Webcam Configuration Panel */}
@@ -561,6 +592,24 @@ const Prediction: React.FC = () => {
                   />
                   <span className="text-sm text-stone-400">ms</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Confidence Threshold Slider */}
+            <div className="flex flex-col" style={{ width: '200px' }}>
+              <label className="text-sm text-stone-400 mb-1 block">Confidence Threshold</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={confidenceThreshold}
+                onChange={(e) => setConfidenceThreshold(parseInt(e.target.value))}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-stone-500 mt-1">
+                <span>0%</span>
+                <span>{confidenceThreshold}%</span>
+                <span>100%</span>
               </div>
             </div>
           </div>
