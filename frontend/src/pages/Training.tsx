@@ -6,6 +6,7 @@ import { LED } from '../components/ui/LED';
 import { 
   startTraining, 
   stopTraining, 
+  resumeTraining,
   getDatasets, 
   getTrainingSessions 
 } from '../api';
@@ -49,6 +50,13 @@ const Training: React.FC = () => {
   const handleStop = async () => {
     if (activeSession) {
       await stopTraining(activeSession.id);
+      loadSessions();
+    }
+  };
+
+  const handleResume = async (sessionId: string) => {
+    const res = await resumeTraining(sessionId);
+    if (res.data.success) {
       loadSessions();
     }
   };
@@ -318,6 +326,18 @@ const Training: React.FC = () => {
                 }`}>
                   {session.status}
                 </span>
+                
+                {/* Resume Button for stopped/error sessions */}
+                {session.status !== 'running' && session.current_epoch < session.total_epochs && (
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => handleResume(session.id)}
+                    className="ml-4 opacity-50 hover:opacity-100 text-xs py-1 px-3 h-auto"
+                    disabled={activeSession !== undefined && activeSession !== null} // disable if another training is active
+                  >
+                    Resume
+                  </Button>
+                )}
               </div>
             ))
           )}

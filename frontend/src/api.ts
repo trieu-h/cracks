@@ -18,6 +18,7 @@ export const deleteDataset = (id: string) => api.delete(`/datasets/${id}`);
 // Training
 export const startTraining = (config: any) => api.post('/training/start', config);
 export const stopTraining = (sessionId: string) => api.post(`/training/${sessionId}/stop`);
+export const resumeTraining = (sessionId: string) => api.post(`/training/${sessionId}/resume`);
 export const getTrainingStatus = (sessionId: string) => api.get(`/training/${sessionId}/status`);
 export const getTrainingMetrics = (sessionId: string) => api.get(`/training/${sessionId}/metrics`);
 export const getTrainingSessions = () => api.get('/training/sessions');

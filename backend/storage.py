@@ -1,12 +1,12 @@
 """
 Simple storage module - persists to SQLite database.
 """
-from database import load_datasets, save_dataset, delete_dataset
+from database import load_datasets, save_dataset, delete_dataset, save_training_session_db, load_training_sessions_db
 
 # Storage dictionary - datasets loaded from SQLite on startup
 storage = {
     'datasets': {},           # id -> dataset_info (loaded from SQLite)
-    'training_sessions': {},  # id -> session_data
+    'training_sessions': {},  # id -> session_data (loaded from SQLite)
     'models': {},            # id -> model_info
     'predictions': {},       # id -> prediction_result
     'gpu_history': [],       # list of gpu stats over time
@@ -14,9 +14,12 @@ storage = {
 }
 
 def init_storage():
-    """Initialize storage by loading datasets from SQLite database."""
+    """Initialize storage by loading datasets and training sessions from SQLite database."""
     storage['datasets'] = load_datasets()
     print(f"Storage initialized with {len(storage['datasets'])} datasets")
+    
+    storage['training_sessions'] = load_training_sessions_db()
+    print(f"Storage initialized with {len(storage['training_sessions'])} training sessions")
 
 def get_storage():
     """Get the storage dict."""
@@ -40,3 +43,10 @@ def delete_dataset_from_db(dataset_id: str) -> bool:
         # Remove from in-memory storage
         del storage['datasets'][dataset_id]
     return success
+
+def save_training_session(session_id: str) -> bool:
+    """Save a training session from memory to the database."""
+    if session_id in storage['training_sessions']:
+        return save_training_session_db(session_id, storage['training_sessions'][session_id])
+    return False
+

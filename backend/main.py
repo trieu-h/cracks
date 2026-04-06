@@ -16,6 +16,7 @@ from training import start_training_session, stop_training_session
 from prediction import run_prediction, predict_yolo
 from video_prediction import run_video_prediction
 from database import init_db
+from sync import discover_offline_runs
 
 # Create FastAPI app
 app = FastAPI(title="Crack Detection API", version="1.0.0")
@@ -48,6 +49,9 @@ async def startup_event():
     # Store the event loop for WebSocket broadcasts from training threads
     storage['event_loop'] = asyncio.get_running_loop()
     print(f"Stored event loop: {storage['event_loop']}")
+    
+    # Auto-discover models & training metrics created outside of the application boundary
+    discover_offline_runs()
     
     def on_gpu_update(stats):
         # Could broadcast to WebSocket here if needed
@@ -160,6 +164,29 @@ def stop_training(session_id: str):
     """Stop a training session."""
     success = stop_training_session(session_id, storage)
     return {'success': success}
+
+@app.post("/api/training/{session_id}/resume")
+def resume_training(session_id: str):
+    """Resume a stopped training session."""
+    try:
+        if session_id not in storage['training_sessions']:
+            return {'success': False, 'error': 'Session not found'}
+            
+        session = storage['training_sessions'][session_id]
+        
+        # Don't resume if it's already running
+        if session['status'] == 'running':
+            return {'success': False, 'error': 'Session is already running'}
+            
+        # Re-use the existing config, but inject resume=True and the past session_id
+        config = session['config'].copy()
+        
+        # Start training session will inherently look for 'resume_session_id'
+        new_session_id = start_training_session(config, storage, resume_session_id=session_id)
+        
+        return {'success': True, 'session_id': new_session_id}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
 
 @app.get("/api/training/{session_id}/status")
 def get_training_status(session_id: str):

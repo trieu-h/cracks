@@ -35,6 +35,18 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS training_sessions (
+                id TEXT PRIMARY KEY,
+                status TEXT NOT NULL,
+                current_epoch INTEGER NOT NULL DEFAULT 0,
+                total_epochs INTEGER NOT NULL DEFAULT 0,
+                model_type TEXT NOT NULL,
+                start_time REAL NOT NULL,
+                config TEXT NOT NULL,  -- JSON string
+                metrics TEXT NOT NULL  -- JSON array string
+            )
+        ''')
         conn.commit()
         print(f"Database initialized at {DB_PATH}")
     finally:
@@ -156,3 +168,63 @@ def get_dataset(dataset_id: str) -> Optional[Dict[str, Any]]:
 def list_datasets() -> List[Dict[str, Any]]:
     """Get all datasets as a list."""
     return list(load_datasets().values())
+
+
+def save_training_session_db(session_id: str, session_data: dict) -> bool:
+    """Save or update a training session in the database."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            conn.execute('''
+                INSERT OR REPLACE INTO training_sessions 
+                (id, status, current_epoch, total_epochs, model_type, start_time, config, metrics)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                session_id,
+                session_data.get('status', 'running'),
+                session_data.get('current_epoch', 0),
+                session_data.get('total_epochs', 0),
+                session_data.get('model_type', 'yolo'),
+                session_data.get('start_time', 0.0),
+                json.dumps(session_data.get('config', {})),
+                json.dumps(session_data.get('metrics', []))
+            ))
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"Error saving training session to database: {e}")
+        return False
+
+
+def load_training_sessions_db() -> Dict[str, Any]:
+    """Load all training sessions from the database."""
+    sessions = {}
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute('SELECT * FROM training_sessions')
+            rows = cursor.fetchall()
+            
+            for row in rows:
+                session_id = row['id']
+                sessions[session_id] = {
+                    'id': session_id,
+                    'status': row['status'],
+                    'current_epoch': row['current_epoch'],
+                    'total_epochs': row['total_epochs'],
+                    'model_type': row['model_type'],
+                    'start_time': row['start_time'],
+                    'config': json.loads(row['config']),
+                    'metrics': json.loads(row['metrics'])
+                }
+                
+            print(f"Loaded {len(sessions)} training sessions from database")
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"Error loading training sessions from database: {e}")
+    
+    return sessions

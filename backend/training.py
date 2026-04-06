@@ -16,12 +16,21 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
         from ultralytics import YOLO
         import torch
 
-        # Load model
-        model = YOLO("./models/" + config.get('model', 'yolo11n-seg.pt'))
+        # Handle resuming logic
+        is_resuming = config.get('resume', False)
+        
+        # Load model definition
+        if is_resuming:
+            # When resuming, YOLO needs the checkpoint path explicitly
+            ckpt_path = f"./checkpoints/{session_id}/weights/last.pt"
+            print(f"Resuming YOLO from {ckpt_path}")
+            model = YOLO(ckpt_path)
+        else:
+            model = YOLO("./models/" + config.get('model', 'yolo11n-seg.pt'))
+            
         device = "cuda" if torch.cuda.is_available() else "cpu"
         torch.cuda.empty_cache()
 
-        # Training arguments
         args = {
             'data': config['dataset_yaml'],
             'epochs': config.get('epochs', 100),
@@ -38,6 +47,10 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
             'name': session_id,
             'exist_ok': True,
         }
+
+        # If resuming, inject the resume flag
+        if is_resuming:
+            args['resume'] = True
 
         # Custom callback for epoch end
         def callback_trainer(trainer):
@@ -272,6 +285,16 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
             'device': device,  # Pass device if model.train supports it
         }
 
+        is_resuming = config.get('resume', False)
+        if is_resuming:
+            # Provide explicit checkpoint path for PTL to resume
+            ckpt_path = checkpoint_dir / 'last.ckpt'
+            if ckpt_path.exists():
+                print(f"Resuming RF-DETR from {ckpt_path}")
+                args['resume'] = str(ckpt_path)
+            else:
+                print(f"WARNING: Wanted to resume but {ckpt_path} missing.")
+
         print(f"Starting RF-DETR training for session {session_id}")
         print(f"Dataset: {dataset_dir}")
         print(f"Epochs: {args['epochs']}, Batch size: {args['batch_size']}")
@@ -335,29 +358,52 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
         if on_complete:
             on_complete(session_id, False, error_msg)
 
-def start_training_session(config: Dict, storage: Dict) -> str:
+def start_training_session(config: Dict, storage: Dict, resume_session_id: Optional[str] = None) -> str:
     """Start a training session and return session ID."""
-    session_id = str(uuid.uuid4())[:8]
-
-    # Create stop event
-    stop_event = threading.Event()
+    if resume_session_id and resume_session_id in storage['training_sessions']:
+        session_id = resume_session_id
+        session = storage['training_sessions'][session_id]
+        
+        # We inject resume=True silently so the training loop handles it
+        config['resume'] = True
+        
+        # Retain past epochs and metrics
+        current_epoch = session['current_epoch']
+        metrics = session['metrics']
+        
+        # Reset stop event & update status
+        stop_event = threading.Event()
+        session['stop_event'] = stop_event
+        session['status'] = 'running'
+        session['config'] = config
+        
+    else:
+        session_id = str(uuid.uuid4())[:8]
+        # Create stop event
+        stop_event = threading.Event()
+        current_epoch = 0
+        metrics = []
+        
+        # Store initial session
+        storage['training_sessions'][session_id] = {
+            'id': session_id,
+            'config': config,
+            'status': 'running',
+            'start_time': time.time(),
+            'current_epoch': current_epoch,
+            'total_epochs': config.get('epochs', 100),
+            'metrics': metrics,
+            'stop_event': stop_event,
+            'model_type': config.get('model_type', 'yolo')
+        }
 
     # Get the stored event loop from storage (set during startup)
     event_loop = storage.get('event_loop')
     print(f"Using event loop from storage: {event_loop}")
 
-    # Store session
-    storage['training_sessions'][session_id] = {
-        'id': session_id,
-        'config': config,
-        'status': 'running',
-        'start_time': time.time(),
-        'current_epoch': 0,
-        'total_epochs': config.get('epochs', 100),
-        'metrics': [],
-        'stop_event': stop_event,
-        'model_type': config.get('model_type', 'yolo')
-    }
+    # Save initial state to database
+    from storage import save_training_session
+    save_training_session(session_id)
 
     # Start training in thread
     def on_epoch_end(sid, epoch, metrics):
@@ -368,6 +414,10 @@ def start_training_session(config: Dict, storage: Dict) -> str:
         if sid in storage['training_sessions']:
             storage['training_sessions'][sid]['current_epoch'] = epoch
             storage['training_sessions'][sid]['metrics'].append(metrics)
+            
+            # Save to database
+            from storage import save_training_session
+            save_training_session(sid)
 
             # Broadcast to WebSocket if available
             print(f"Checking websockets for session {sid}: {sid in storage.get('active_websockets', {})}")
@@ -401,6 +451,10 @@ def start_training_session(config: Dict, storage: Dict) -> str:
         if sid in storage['training_sessions']:
             storage['training_sessions'][sid]['status'] = 'completed' if success else 'error'
             storage['training_sessions'][sid]['result'] = result
+            
+            # Save final state to database
+            from storage import save_training_session
+            save_training_session(sid)
 
             # Broadcast completion
             if sid in storage.get('active_websockets', {}):
