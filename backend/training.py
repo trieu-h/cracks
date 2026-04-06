@@ -18,7 +18,7 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
 
         # Load model
         model = YOLO("./models/" + config.get('model', 'yolo11n-seg.pt'))
-        device = "0" if torch.cuda.is_available() else "cpu"
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         torch.cuda.empty_cache()
 
         # Training arguments
@@ -92,8 +92,45 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
                 print(f"Calling on_epoch_end callback")
                 on_epoch_end(session_id, epoch, metrics)
 
-        # Add callback
+        # Custom callback for batch end
+        def callback_batch(trainer):
+            if stop_event and stop_event.is_set():
+                trainer.stop = True
+                return
+
+            # Only send every 10 steps to avoid flooding
+            if trainer.fitness % 10 != 0 and trainer.epoch == 0:
+                 # In early training, send more often
+                 pass
+            
+            # Use same logic to get current loss
+            def to_float(val):
+                if hasattr(val, 'item'): return float(val.item())
+                return float(val) if val is not None else 0.0
+
+            batch_metrics = {
+                'epoch': trainer.epoch,
+                'step': trainer.fitness,
+                'box_loss': to_float(trainer.loss_items[0]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 0 else 0.0,
+                'cls_loss': to_float(trainer.loss_items[1]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 1 else 0.0,
+                'dfl_loss': to_float(trainer.loss_items[2]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 2 else 0.0,
+            }
+
+            if event_loop and event_loop.is_running():
+                from storage import storage
+                if session_id in storage.get('active_websockets', {}):
+                    for ws in storage['active_websockets'][session_id]:
+                        asyncio.run_coroutine_threadsafe(
+                            ws.send_json({
+                                'type': 'batch',
+                                'metrics': batch_metrics
+                            }),
+                            event_loop
+                        )
+
+        # Add callbacks
         model.add_callback('on_train_epoch_end', callback_trainer)
+        model.add_callback('on_train_batch_end', callback_batch)
 
         # Train
         results = model.train(**args)
@@ -146,9 +183,8 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
 
         # Initialize segmentation model
         model_variant = config.get('model', 'RFDETRSegMedium')
-
         print(f"Initializing RF-DETR segmentation model: {model_variant}")
-        
+
         # Map model names to segmentation classes
         model_map = {
             'RFDETRSegNano': RFDETRSegNano,
@@ -164,8 +200,11 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
             'RFDETRLarge': RFDETRSegLarge,
         }
         model_class = model_map.get(model_variant, RFDETRSegMedium)
-        
         model = model_class()
+
+        # Move model to GPU if available
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Using device: {device} for RF-DETR training")
 
         # Create checkpoint directory
         checkpoint_dir = Path('./checkpoints') / session_id
@@ -174,34 +213,52 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
         # Training history for callbacks
         history = []
 
-        # Custom callback for epoch end
-        def callback(data):
-            """Callback that receives epoch data from RF-DETR."""
-            if stop_event and stop_event.is_set():
-                # RF-DETR doesn't have a built-in stop mechanism, but we can track it
-                return
+        # ... (rest of function)
+        # Define a custom PTL callback for real-time updates
+        from pytorch_lightning.callbacks import Callback as PTLCallback
+        
+        class BridgeCallback(PTLCallback):
+            def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+                if stop_event and stop_event.is_set():
+                    trainer.should_stop = True
+                    return
 
-            # Extract epoch and loss info from RF-DETR callback data
-            epoch = data.get('epoch', len(history))
-            
-            # RF-DETR provides different loss metrics
-            metrics = {
-                'epoch': epoch,
-                'box_loss': data.get('loss', 0.0),
-                'cls_loss': data.get('class_loss', 0.0),
-                'dfl_loss': data.get('dfl_loss', 0.0) if 'dfl_loss' in data else 0.0,
-            }
-            
-            history.append(metrics)
-            
-            if on_epoch_end:
-                on_epoch_end(session_id, epoch, metrics)
+                # Send batch updates every 50 steps
+                if trainer.global_step % 50 == 0:
+                    metrics = {
+                        'epoch': trainer.current_epoch,
+                        'step': trainer.global_step,
+                        # PTL typically stores losses in callback_metrics
+                        'box_loss': float(trainer.callback_metrics.get('train/loss', 0.0)),
+                    }
+                    if event_loop and event_loop.is_running():
+                        from storage import storage
+                        if session_id in storage.get('active_websockets', {}):
+                            for ws in storage['active_websockets'][session_id]:
+                                asyncio.run_coroutine_threadsafe(
+                                    ws.send_json({'type': 'batch', 'metrics': metrics}),
+                                    event_loop
+                                )
 
-        # Register callback
-        if hasattr(model, 'callbacks'):
-            if 'on_fit_epoch_end' not in model.callbacks:
-                model.callbacks['on_fit_epoch_end'] = []
-            model.callbacks['on_fit_epoch_end'].append(callback)
+            def on_train_epoch_end(self, trainer, pl_module):
+                # Standard epoch-end logic
+                metrics = {
+                    'epoch': trainer.current_epoch,
+                    'box_loss': float(trainer.callback_metrics.get('train/loss', 0.0)),
+                }
+                if on_epoch_end:
+                    on_epoch_end(session_id, trainer.current_epoch, metrics)
+
+        # HACK: Patch build_trainer in the rfdetr library to inject our callback
+        import rfdetr.training
+        original_build_trainer = rfdetr.training.build_trainer
+        
+        def patched_build_trainer(*args, **kwargs):
+            trainer = original_build_trainer(*args, **kwargs)
+            trainer.callbacks.append(BridgeCallback())
+            return trainer
+            
+        rfdetr.training.build_trainer = patched_build_trainer
 
         # Training arguments
         args = {
@@ -212,6 +269,7 @@ def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable]
             'lr': config.get('lr0', 1e-4),
             'run_test': False,  # Disable test evaluation to avoid test_stats error
             'output_dir': str(checkpoint_dir),  # Set output directory
+            'device': device,  # Pass device if model.train supports it
         }
 
         print(f"Starting RF-DETR training for session {session_id}")

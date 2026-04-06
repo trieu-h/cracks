@@ -22,6 +22,12 @@ def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
         # Load model
         model = YOLO(model_path)
         
+        # Move model to GPU if available
+        import torch
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model.to(device)
+        print(f"Using device: {device} for YOLO prediction")
+        
         # Run prediction
         start_time = time.time()
         results = model(image_path, conf=conf)
@@ -128,6 +134,11 @@ def predict_rfdetr(model_path: str, image_path: str, conf: float = 0.25) -> Dict
             # If no checkpoint exists, use base model
             print("No checkpoint found, using pretrained base model")
             model = RFDETRSegMedium()
+        
+        # Move model to GPU if available
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Using device: {device} for RF-DETR prediction")
+        print(f"Using device: {device} for RF-DETR prediction")
         
         # Load and predict
         image = Image.open(image_path)
