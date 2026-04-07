@@ -19,7 +19,17 @@ def init_storage():
     print(f"Storage initialized with {len(storage['datasets'])} datasets")
     
     storage['training_sessions'] = load_training_sessions_db()
-    print(f"Storage initialized with {len(storage['training_sessions'])} training sessions")
+    
+    # Auto-fix stuck sessions: Any 'running' session on boot is actually dead
+    fixed_count = 0
+    for sid, session in storage['training_sessions'].items():
+        if session.get('status') == 'running':
+            session['status'] = 'error'
+            session['error_message'] = 'Session terminated unexpectedly by server restart'
+            save_training_session_db(sid, session)
+            fixed_count += 1
+            
+    print(f"Storage initialized with {len(storage['training_sessions'])} training sessions (fixed {fixed_count} stuck sessions)")
 
 def get_storage():
     """Get the storage dict."""

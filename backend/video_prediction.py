@@ -7,7 +7,7 @@ from typing import Dict, List
 from pathlib import Path
 import cv2
 import numpy as np
-from prediction import predict_yolo, predict_rfdetr
+from prediction import predict_yolo
 
 
 def extract_frames(video_path: str, output_dir: str, sample_interval: int = 1) -> List[str]:
@@ -73,10 +73,8 @@ def predict_video_frames(
     results = []
     
     for idx, frame_path in enumerate(frame_paths):
-        if model_type == 'yolo':
-            result = predict_yolo(model_path, frame_path, conf)
-        else:
-            result = predict_rfdetr(model_path, frame_path, conf)
+        # Exclusively use YOLO predictor
+        result = predict_yolo(model_path, frame_path, conf)
         
         results.append({
             'frame_idx': idx,
@@ -174,7 +172,7 @@ def create_annotated_video(
 def run_video_prediction(
     model_path: str,
     video_path: str,
-    model_type: str = 'yolo',
+    model_type: str = 'yolov26',
     conf: float = 0.25,
     sample_interval: int = 1,
     storage: Dict = None

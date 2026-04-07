@@ -111,10 +111,7 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
                 trainer.stop = True
                 return
 
-            # Only send every 10 steps to avoid flooding
-            if trainer.fitness % 10 != 0 and trainer.epoch == 0:
-                 # In early training, send more often
-                 pass
+            # Remove buggy fitness throttle - let the frontend handle incoming frequency or just send them all
             
             # Use same logic to get current loss
             def to_float(val):
@@ -123,7 +120,7 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
 
             batch_metrics = {
                 'epoch': trainer.epoch,
-                'step': trainer.fitness,
+                'step': getattr(trainer, 'batch_idx', 0),
                 'box_loss': to_float(trainer.loss_items[0]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 0 else 0.0,
                 'cls_loss': to_float(trainer.loss_items[1]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 1 else 0.0,
                 'dfl_loss': to_float(trainer.loss_items[2]) if hasattr(trainer, 'loss_items') and len(trainer.loss_items) > 2 else 0.0,
@@ -167,196 +164,7 @@ def train_yolo(config: Dict, session_id: str, on_epoch_end: Optional[Callable] =
         if on_complete:
             on_complete(session_id, False, str(e))
 
-def train_rfdetr(config: Dict, session_id: str, on_epoch_end: Optional[Callable] = None,
-                 on_complete: Optional[Callable] = None, stop_event: Optional[threading.Event] = None,
-                 event_loop: Optional[asyncio.AbstractEventLoop] = None):
-    """RF-DETR training implementation for segmentation only."""
-    try:
-        from rfdetr import RFDETRSegNano, RFDETRSegSmall, RFDETRSegMedium, RFDETRSegLarge, RFDETRSegXLarge, RFDETRSeg2XLarge
-        from pathlib import Path
-        import os
-        import torch
 
-        # Force CPU on macOS to avoid MPS "Unsupported Border padding mode" error
-        # RF-DETR uses padding_mode='border' which is not supported on MPS
-        if torch.backends.mps.is_available():
-            print("MPS detected but forcing CPU to avoid 'Unsupported Border padding mode' error")
-            os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-            # Set device to CPU explicitly
-            torch.set_default_device('cpu')
-
-        # Get dataset directory from the YAML path
-        dataset_yaml = config.get('dataset_yaml', '')
-        if not dataset_yaml:
-            raise ValueError("No dataset YAML provided")
-
-        dataset_dir = str(Path(dataset_yaml).parent)
-        if not os.path.exists(dataset_dir):
-            raise ValueError(f"Dataset directory not found: {dataset_dir}")
-
-        # Initialize segmentation model
-        model_variant = config.get('model', 'RFDETRSegMedium')
-        print(f"Initializing RF-DETR segmentation model: {model_variant}")
-
-        # Map model names to segmentation classes
-        model_map = {
-            'RFDETRSegNano': RFDETRSegNano,
-            'RFDETRSegSmall': RFDETRSegSmall,
-            'RFDETRSegMedium': RFDETRSegMedium,
-            'RFDETRSegLarge': RFDETRSegLarge,
-            'RFDETRSegXLarge': RFDETRSegXLarge,
-            'RFDETRSeg2XLarge': RFDETRSeg2XLarge,
-            # Fallback mappings (without Seg prefix)
-            'RFDETRNano': RFDETRSegNano,
-            'RFDETRSmall': RFDETRSegSmall,
-            'RFDETRMedium': RFDETRSegMedium,
-            'RFDETRLarge': RFDETRSegLarge,
-        }
-        model_class = model_map.get(model_variant, RFDETRSegMedium)
-        model = model_class()
-
-        # Move model to GPU if available
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Using device: {device} for RF-DETR training")
-
-        # Create checkpoint directory
-        checkpoint_dir = Path('./checkpoints') / session_id
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)
-
-        # Training history for callbacks
-        history = []
-
-        # ... (rest of function)
-        # Define a custom PTL callback for real-time updates
-        from pytorch_lightning.callbacks import Callback as PTLCallback
-        
-        class BridgeCallback(PTLCallback):
-            def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
-                if stop_event and stop_event.is_set():
-                    trainer.should_stop = True
-                    return
-
-                # Send batch updates every 50 steps
-                if trainer.global_step % 50 == 0:
-                    metrics = {
-                        'epoch': trainer.current_epoch,
-                        'step': trainer.global_step,
-                        # PTL typically stores losses in callback_metrics
-                        'box_loss': float(trainer.callback_metrics.get('train/loss', 0.0)),
-                    }
-                    if event_loop and event_loop.is_running():
-                        from storage import storage
-                        if session_id in storage.get('active_websockets', {}):
-                            for ws in storage['active_websockets'][session_id]:
-                                asyncio.run_coroutine_threadsafe(
-                                    ws.send_json({'type': 'batch', 'metrics': metrics}),
-                                    event_loop
-                                )
-
-            def on_train_epoch_end(self, trainer, pl_module):
-                # Standard epoch-end logic
-                metrics = {
-                    'epoch': trainer.current_epoch,
-                    'box_loss': float(trainer.callback_metrics.get('train/loss', 0.0)),
-                }
-                if on_epoch_end:
-                    on_epoch_end(session_id, trainer.current_epoch, metrics)
-
-        # HACK: Patch build_trainer in the rfdetr library to inject our callback
-        import rfdetr.training
-        original_build_trainer = rfdetr.training.build_trainer
-        
-        def patched_build_trainer(*args, **kwargs):
-            trainer = original_build_trainer(*args, **kwargs)
-            trainer.callbacks.append(BridgeCallback())
-            return trainer
-            
-        rfdetr.training.build_trainer = patched_build_trainer
-
-        # Training arguments
-        args = {
-            'dataset_dir': dataset_dir,
-            'epochs': config.get('epochs', 10),  # RF-DETR typically needs fewer epochs
-            'batch_size': config.get('batch', 4),
-            'grad_accum_steps': config.get('grad_accum_steps', 4),
-            'lr': config.get('lr0', 1e-4),
-            'run_test': False,  # Disable test evaluation to avoid test_stats error
-            'output_dir': str(checkpoint_dir),  # Set output directory
-            'device': device,  # Pass device if model.train supports it
-        }
-
-        is_resuming = config.get('resume', False)
-        if is_resuming:
-            # Provide explicit checkpoint path for PTL to resume
-            ckpt_path = checkpoint_dir / 'last.ckpt'
-            if ckpt_path.exists():
-                print(f"Resuming RF-DETR from {ckpt_path}")
-                args['resume'] = str(ckpt_path)
-            else:
-                print(f"WARNING: Wanted to resume but {ckpt_path} missing.")
-
-        print(f"Starting RF-DETR training for session {session_id}")
-        print(f"Dataset: {dataset_dir}")
-        print(f"Epochs: {args['epochs']}, Batch size: {args['batch_size']}")
-
-        # Train with error handling for test_stats issue
-        try:
-            model.train(**args)
-        except Exception as train_error:
-            # Check if it's the test_stats error - if training completed, we can continue
-            error_msg = str(train_error)
-            if "test_stats" in error_msg:
-                print(f"Warning: Training completed but encountered test_stats error (this is a known RF-DETR issue): {error_msg}")
-                print("Continuing with checkpoint saving...")
-            else:
-                raise
-
-        # Save model checkpoint
-        import shutil
-        best_path = checkpoint_dir / 'weights' / 'best.pt'
-        best_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # RF-DETR saves to output_dir/checkpoint_best_total.pth
-        # Let's find and copy the checkpoint
-        rfdetr_checkpoint = checkpoint_dir / 'checkpoint_best_total.pth'
-        if rfdetr_checkpoint.exists():
-            print(f"Found RF-DETR checkpoint: {rfdetr_checkpoint}")
-            shutil.copy(rfdetr_checkpoint, best_path)
-        elif hasattr(model, 'checkpoint_path') and model.checkpoint_path:
-            print(f"Copying checkpoint from model.checkpoint_path: {model.checkpoint_path}")
-            shutil.copy(model.checkpoint_path, best_path)
-        else:
-            # Look for any .pth files in the checkpoint directory
-            pth_files = list(checkpoint_dir.glob('*.pth'))
-            if pth_files:
-                latest_checkpoint = max(pth_files, key=lambda p: p.stat().st_mtime)
-                print(f"Found latest checkpoint: {latest_checkpoint}")
-                shutil.copy(latest_checkpoint, best_path)
-        
-        # Create metadata file to track model type (always segmentation)
-        meta_path = checkpoint_dir / 'metadata.txt'
-        meta_path.write_text(f'# RF-DETR model metadata\n# Session: {session_id}\n# Model: {model_variant}\n# Task: segmentation')
-        
-        # Verify checkpoint exists
-        if not best_path.exists():
-            print(f"Warning: Checkpoint not found at {best_path}, creating marker file")
-            best_path.write_text(f'# RF-DETR model checkpoint\n# Session: {session_id}\n# Model: {model_variant}\n# Task: segmentation')
-
-        if on_complete:
-            on_complete(session_id, True, str(best_path))
-
-    except ImportError as e:
-        error_msg = f"RF-DETR library not installed. Install with: pip install rfdetr. Error: {e}"
-        print(error_msg)
-        if on_complete:
-            on_complete(session_id, False, error_msg)
-    except Exception as e:
-        error_msg = f"RF-DETR training error: {str(e)}"
-        print(error_msg)
-        import traceback
-        traceback.print_exc()
-        if on_complete:
-            on_complete(session_id, False, error_msg)
 
 def start_training_session(config: Dict, storage: Dict, resume_session_id: Optional[str] = None) -> str:
     """Start a training session and return session ID."""
@@ -473,20 +281,12 @@ def start_training_session(config: Dict, storage: Dict, resume_session_id: Optio
                     except Exception as e:
                         print(f"WebSocket send error: {e}")
 
-    model_type = config.get('model_type', 'yolo')
-
-    if model_type == 'yolo':
-        thread = threading.Thread(
-            target=train_yolo,
-            args=(config, session_id, on_epoch_end, on_complete, stop_event, event_loop),
-            daemon=True
-        )
-    else:
-        thread = threading.Thread(
-            target=train_rfdetr,
-            args=(config, session_id, on_epoch_end, on_complete, stop_event, event_loop),
-            daemon=True
-        )
+    # Exclusively use YOLO training (YOLOv11 & YOLOv26 handled natively by Ultralytics)
+    thread = threading.Thread(
+        target=train_yolo,
+        args=(config, session_id, on_epoch_end, on_complete, stop_event, event_loop),
+        daemon=True
+    )
 
     thread.start()
 
