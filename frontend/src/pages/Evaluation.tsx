@@ -83,12 +83,17 @@ const Evaluation: React.FC = () => {
                   <th className="py-4 px-4 font-medium">weight_decay</th>
                   <th className="py-4 px-4 font-medium">momentum</th>
                   <th className="py-4 px-4 font-medium">final_loss</th>
+                  <th className="py-4 px-4 font-medium">F1 Score</th>
+                  <th className="py-4 px-4 font-medium">Precision</th>
+                  <th className="py-4 px-4 font-medium">Recall</th>
+                  <th className="py-4 px-4 font-medium">mAP50</th>
+                  <th className="py-4 px-4 font-medium">mAP50-95</th>
                 </tr>
               </thead>
               <tbody className="text-sm divide-y divide-stone-800/50">
                 {sessions.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="py-20 text-center text-stone-600">
+                      <td colSpan={17} className="py-20 text-center text-stone-600">
                       {loading ? 'Fetching history...' : 'No training sessions found'}
                     </td>
                   </tr>
@@ -112,6 +117,21 @@ const Evaluation: React.FC = () => {
                       <td className="py-4 px-4 text-stone-300 text-center">{session.config?.momentum || '0.937'}</td>
                       <td className="py-4 px-4 text-stone-300 text-center font-mono">
                         {session.latest_metrics?.box_loss?.toFixed(4) || '--'}
+                      </td>
+                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                        {session.latest_metrics?.f1 !== undefined ? `${(session.latest_metrics.f1 * 100).toFixed(1)}%` : '--'}
+                      </td>
+                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                        {session.latest_metrics?.precision !== undefined ? `${(session.latest_metrics.precision * 100).toFixed(1)}%` : '--'}
+                      </td>
+                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                        {session.latest_metrics?.recall !== undefined ? `${(session.latest_metrics.recall * 100).toFixed(1)}%` : '--'}
+                      </td>
+                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                        {session.latest_metrics?.mAP50 !== undefined ? `${(session.latest_metrics.mAP50 * 100).toFixed(1)}%` : '--'}
+                      </td>
+                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                        {session.latest_metrics?.mAP50_95 !== undefined ? `${(session.latest_metrics.mAP50_95 * 100).toFixed(1)}%` : '--'}
                       </td>
                     </tr>
                   ))
