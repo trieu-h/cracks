@@ -8,27 +8,11 @@ import {
   Clock, 
   Layers,
   Database,
-  Box,
-  Sparkles,
-  ChevronRight,
-  Info,
-  BarChart3,
-  Target,
-  Zap
+  Info
 } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { getGPUStats, getTrainingSessions } from '../api';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
-  Area
-} from 'recharts';
+// Charts temporarily hidden - recharts imports removed
 
 const Dashboard: React.FC = () => {
   const [gpuStats, setGpuStats] = useState<any>(null);
@@ -109,7 +93,7 @@ const Dashboard: React.FC = () => {
   const runningCount = sessions.filter(s => s.status === 'running').length;
   const completedCount = sessions.filter(s => s.status === 'completed').length;
   const stats = selectedSession?.latest_metrics || {};
-  const metrics = selectedSession?.all_metrics || [];
+  // const metrics = selectedSession?.all_metrics || []; // Temporarily unused - charts hidden
 
   const formatPercent = (val: number | undefined) => {
     if (val === undefined) return '--%';
@@ -266,59 +250,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-2 gap-8">
-          {/* Training Progress (Loss) */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <BarChart3 size={18} className="text-blue-400" />
-              <h3 className="text-base font-medium text-stone-100">Training Progress</h3>
-            </div>
-            <div className="card-clean h-[250px] p-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={metrics}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
-                  <XAxis dataKey="epoch" stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#171717', border: '1px solid #262626', borderRadius: '8px' }}
-                    itemStyle={{ fontSize: '12px' }}
-                  />
-                  <Line type="monotone" dataKey="box_loss" stroke="#3b82f6" strokeWidth={2} dot={false} name="Train Loss" />
-                  <Line type="monotone" dataKey="cls_loss" stroke="#f59e0b" strokeWidth={2} dot={false} name="Val Loss" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* mAP Score */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Target size={18} className="text-pink-400" />
-              <h3 className="text-base font-medium text-stone-100">mAP Score (IoU=0.5)</h3>
-            </div>
-            <div className="card-clean h-[250px] p-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={metrics}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
-                  <XAxis dataKey="epoch" stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} domain={[0, 1]} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#171717', border: '1px solid #262626', borderRadius: '8px' }}
-                    itemStyle={{ fontSize: '12px' }}
-                  />
-                  <Area type="monotone" dataKey="mAP50" stroke="#22c55e" fill="url(#colorMap)" strokeWidth={2} name="mAP50" />
-                  <defs>
-                    <linearGradient id="colorMap" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
+        {/* Charts Grid - Hidden for now */}
 
         {/* System Status (Very small as requested) */}
         <div className="flex items-center gap-6 pt-6 border-t border-stone-800">
