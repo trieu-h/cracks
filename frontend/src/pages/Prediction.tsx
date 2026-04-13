@@ -112,8 +112,6 @@ const Prediction: React.FC = () => {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [sampleInterval, setSampleInterval] = useState<number>(5);
   
-  // Confidence threshold state (0-100)
-  const [confidenceThreshold, setConfidenceThreshold] = useState<number>(50);
   
   // Webcam prediction states
   const [webcamActive, setWebcamActive] = useState(false);
@@ -239,7 +237,7 @@ const Prediction: React.FC = () => {
       const formData = new FormData();
       formData.append('image', file);
       formData.append('model_path', selectedModelData?.path || '');
-      formData.append('conf', (confidenceThreshold / 100).toString());
+
       
       const startTime = performance.now();
       
@@ -302,7 +300,7 @@ const Prediction: React.FC = () => {
       const formData = new FormData();
       formData.append('image', selectedFile);
       formData.append('model_path', selectedModelData?.path || '');
-      formData.append('conf', (confidenceThreshold / 100).toString());
+
 
       try {
         const res = await runPrediction(formData);
@@ -323,7 +321,7 @@ const Prediction: React.FC = () => {
       const formData = new FormData();
       formData.append('video', selectedVideo);
       formData.append('model_path', selectedModelData?.path || '');
-      formData.append('conf', (confidenceThreshold / 100).toString());
+
       formData.append('sample_interval', sampleInterval.toString());
 
       try {
@@ -436,23 +434,6 @@ const Prediction: React.FC = () => {
                 </div>
               </div>
 
-              {/* Confidence Threshold Slider */}
-              <div style={{ minWidth: '200px', flex: '1 1 200px' }}>
-                <label className="text-sm text-stone-400 mb-2 block">Confidence Threshold</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={confidenceThreshold}
-                  onChange={(e) => setConfidenceThreshold(parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-stone-500 mt-1">
-                  <span>0%</span>
-                  <span>{confidenceThreshold}%</span>
-                  <span>100%</span>
-                </div>
-              </div>
 
               {/* Run Prediction Button */}
               <div>
@@ -597,23 +578,6 @@ const Prediction: React.FC = () => {
                 </div>
               </div>
 
-              {/* Confidence Threshold Slider */}
-              <div className="flex flex-col" style={{ width: '200px' }}>
-                <label className="text-sm text-stone-400 mb-1 block">Confidence Threshold</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={confidenceThreshold}
-                  onChange={(e) => setConfidenceThreshold(parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-stone-500 mt-1">
-                  <span>0%</span>
-                  <span>{confidenceThreshold}%</span>
-                  <span>100%</span>
-                </div>
-              </div>
             </div>
           </Panel>
         )}
@@ -685,7 +649,7 @@ const Prediction: React.FC = () => {
 
                       <div className="mt-4 shrink-0">
                         <div className="flex items-center justify-between text-sm text-stone-400 mb-2">
-                          <span>{result.result.num_detections} objects detected</span>
+                          <span>{result.result.num_detections} {result.result.num_detections === 1 ? 'crack' : 'cracks'} detected</span>
                           <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">Analysis</span>
                         </div>
                         
@@ -703,21 +667,7 @@ const Prediction: React.FC = () => {
                                 {result.result.detections.reduce((acc: number, d: any) => acc + (d.area || 0), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} px²
                               </span>
                             </div>
-                            <div className="bg-stone-800/50 p-2 rounded flex flex-col col-span-2">
-                              <span className="text-stone-500 mb-1">Severity Breakdown:</span>
-                              <div className="flex gap-4">
-                                <span className="text-red-400 flex items-center gap-1">
-                                  <AlertTriangle size={10} />
-                                  {result.result.detections.filter((d: any) => d.severity === 'High').length} High
-                                </span>
-                                <span className="text-yellow-400">
-                                  {result.result.detections.filter((d: any) => d.severity === 'Medium').length} Medium
-                                </span>
-                                <span className="text-stone-400">
-                                  {result.result.detections.filter((d: any) => d.severity === 'Low').length} Low
-                                </span>
-                              </div>
-                            </div>
+
                           </div>
                         )}
                       </div>

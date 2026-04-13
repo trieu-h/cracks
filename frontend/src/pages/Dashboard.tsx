@@ -220,8 +220,24 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Dataset Path</span>
-                  <span className="text-stone-200 truncate block max-w-[200px]">{selectedSession?.config?.dataset_yaml || '--'}</span>
+                  <span className="text-stone-200 truncate block max-w-[200px]" title={selectedSession?.config?.dataset_yaml || selectedSession?.config?.data || '--'}>{selectedSession?.config?.dataset_yaml || selectedSession?.config?.data || '--'}</span>
                 </div>
+                {(selectedSession?.config?.imgsz || selectedSession?.config?.batch) && (
+                  <>
+                    <div>
+                      <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Image Size</span>
+                      <span className="text-stone-200">{selectedSession?.config?.imgsz || '--'}</span>
+                    </div>
+                    <div>
+                      <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Batch Size</span>
+                      <span className="text-stone-200">{selectedSession?.config?.batch || '--'}</span>
+                    </div>
+                    <div>
+                      <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Learning Rate / Opt</span>
+                      <span className="text-stone-200">{selectedSession?.config?.lr0 || '--'} / {selectedSession?.config?.optimizer || '--'}</span>
+                    </div>
+                  </>
+                )}
               </div>
            </div>
         )}

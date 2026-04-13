@@ -212,6 +212,9 @@ def get_training_metrics(session_id: str):
 @app.get("/api/training/sessions")
 def list_training_sessions():
     """List all training sessions."""
+    # Discover any newly dropped models before returning
+    discover_offline_runs()
+    
     sessions = []
     for sid, session in storage['training_sessions'].items():
         # Get latest metrics

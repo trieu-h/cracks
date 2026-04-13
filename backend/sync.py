@@ -58,8 +58,18 @@ def discover_offline_runs():
         if base_path.exists():
             for csv_path in base_path.rglob('results.csv'):
                 runs_to_check.append(csv_path.parent)
+                
+    # Also collect any configless .pt files in checkpoints
+    checkpoints_path = Path('./checkpoints')
+    if checkpoints_path.exists():
+        for pt_file in checkpoints_path.rglob('*.pt'):
+            parent_dir = pt_file.parent
+            if parent_dir.name == 'weights':
+                parent_dir = parent_dir.parent
+            if parent_dir not in runs_to_check:
+                runs_to_check.append(parent_dir)
 
-    for run_dir in runs_to_check:
+    for run_dir in set(runs_to_check):
         session_id = run_dir.name
         # Some folders might be named 'train' inside 'segment' or they are actual session IDs
         if session_id in ('train', 'train2', 'val', 'tune'):
@@ -70,26 +80,77 @@ def discover_offline_runs():
             continue
             
         csv_path = run_dir / 'results.csv'
+        metrics = []
+        config = {'imported': True, 'path': str(run_dir)}
+        model_type = 'yolo'
+        total_epochs = 0
+        
         if csv_path.exists():
-            print(f"Discovered offline run: {session_id} at {csv_path}")
-            
+            print(f"Discovered offline run from CSV: {session_id} at {csv_path}")
             metrics = parse_yolo_results_csv(csv_path)
             total_epochs = len(metrics)
-            
-            # Determine if YOLO or RF-DETR based on path or presence of metadata
-            model_type = 'yolo'
             if 'checkpoints' in str(run_dir) and (run_dir / 'metadata.txt').exists():
                 model_type = 'rfdetr'
+            config['model_type'] = model_type
+        else:
+            # Fallback to checking the .pt file
+            pt_files = list(run_dir.glob('*.pt'))
+            if not pt_files and (run_dir / 'weights').exists():
+                pt_files = list((run_dir / 'weights').glob('*.pt'))
                 
-            storage['training_sessions'][session_id] = {
-                'id': session_id,
-                'status': 'completed',
-                'current_epoch': total_epochs - 1 if total_epochs > 0 else 0,
-                'total_epochs': total_epochs,
-                'model_type': model_type,
-                'start_time': run_dir.stat().st_mtime,
-                'config': {'model_type': model_type, 'imported': True, 'path': str(run_dir)},
-                'metrics': metrics
-            }
-            save_training_session(session_id)
-            print(f"Successfully synced offline run {session_id} to database.")
+            if pt_files:
+                pt_file = pt_files[0]
+                print(f"Discovered offline run from PT file: {session_id} at {pt_file}")
+                try:
+                    import torch
+                    import warnings
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore')
+                        ckpt = torch.load(str(pt_file), map_location='cpu', weights_only=False)
+                        
+                        if 'train_args' in ckpt:
+                            train_args = ckpt['train_args']
+                            config.update(train_args)
+                            total_epochs = train_args.get('epochs', 0)
+                            if 'model' in train_args:
+                                model_type = train_args['model']
+                                
+                        if 'train_metrics' in ckpt:
+                            t_metrics = ckpt['train_metrics']
+                            prec = t_metrics.get('metrics/precision(B)', t_metrics.get('metrics/precision(M)', 0.0))
+                            rec = t_metrics.get('metrics/recall(B)', t_metrics.get('metrics/recall(M)', 0.0))
+                            map50 = t_metrics.get('metrics/mAP50(B)', t_metrics.get('metrics/mAP50(M)', 0.0))
+                            map50_95 = t_metrics.get('metrics/mAP50-95(B)', t_metrics.get('metrics/mAP50-95(M)', 0.0))
+                            
+                            f1 = 2 * (prec * rec) / (prec + rec) if (prec + rec) > 0 else 0.0
+                            metrics = [{
+                                'epoch': ckpt.get('epoch', total_epochs - 1 if total_epochs > 0 else 0) if isinstance(ckpt.get('epoch'), int) else total_epochs - 1,
+                                'box_loss': t_metrics.get('val/box_loss', 0.0),
+                                'cls_loss': t_metrics.get('val/cls_loss', 0.0),
+                                'dfl_loss': t_metrics.get('val/dfl_loss', 0.0),
+                                'precision': prec,
+                                'recall': rec,
+                                'mAP50': map50,
+                                'mAP50_95': map50_95,
+                                'f1': f1
+                            }]
+                except Exception as e:
+                    print(f"Failed to parse PT file {pt_file}: {e}")
+            else:
+                continue # Skip if no csv and no pt file
+
+        if len(metrics) == 0 and total_epochs == 0:
+             continue # Skip empty discovery
+             
+        storage['training_sessions'][session_id] = {
+            'id': session_id,
+            'status': 'completed',
+            'current_epoch': total_epochs - 1 if total_epochs > 0 else 0,
+            'total_epochs': total_epochs,
+            'model_type': model_type,
+            'start_time': run_dir.stat().st_mtime,
+            'config': config,
+            'metrics': metrics
+        }
+        save_training_session(session_id)
+        print(f"Successfully synced offline run {session_id} to database.")
