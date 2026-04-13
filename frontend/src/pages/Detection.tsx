@@ -388,10 +388,10 @@ const Detection: React.FC = () => {
         {/* Configuration Panel */}
         {activeTab !== 'webcam' && (
           <Panel title={`${activeTab === 'photo' ? 'Photo' : 'Video'} Detection Configuration`}>
-            <div className="flex items-end gap-4 flex-wrap">
+            <div className="flex gap-4 items-start">
               {/* Model Selection */}
-              <div style={{ minWidth: '250px', flex: '1 1 250px' }}>
-                <label className="text-sm text-stone-400 mb-2 block">Select Model</label>
+              <div className="w-[250px] shrink-0">
+                <label className="text-sm text-stone-400 mb-2 block h-[22px]">Select Model</label>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
@@ -412,8 +412,8 @@ const Detection: React.FC = () => {
               </div>
 
               {/* File Upload */}
-              <div style={{ minWidth: '300px', flex: '2 1 300px' }}>
-                <label className="text-sm text-stone-400 mb-2 block">
+              <div className="flex-1 min-w-[300px]">
+                <label className="text-sm text-stone-400 mb-2 block h-[22px]">
                   Select {activeTab === 'photo' ? 'Image' : 'Video'}
                 </label>
                 <div className="flex gap-2">
@@ -434,10 +434,9 @@ const Detection: React.FC = () => {
                 </div>
               </div>
 
-
               {/* Run Detection Button */}
-              <div>
-                <label className="text-sm text-stone-400 mb-2 block opacity-0">Action</label>
+              <div className="shrink-0">
+                <label className="text-sm text-stone-400 mb-2 block h-[22px] opacity-0">Action</label>
                 <Button 
                   primary 
                   onClick={handlePredict} 
@@ -503,10 +502,10 @@ const Detection: React.FC = () => {
         {/* Webcam Configuration Panel */}
         {activeTab === 'webcam' && (
           <Panel title="Webcam Detection Configuration">
-            <div className="flex items-end gap-4">
+            <div className="flex gap-4 items-start">
               {/* Model Selection */}
-              <div style={{ width: '500px' }}>
-                <label className="text-sm text-stone-400 mb-1 block">Select Model</label>
+              <div className="w-[300px] shrink-0">
+                <label className="text-sm text-stone-400 mb-2 block h-[22px]">Select Model</label>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
@@ -520,15 +519,15 @@ const Detection: React.FC = () => {
                   ))}
                 </select>
                 {models.length === 0 && (
-                  <p className="text-xs text-stone-500 mt-1">
+                  <p className="text-xs text-stone-500 mt-2">
                     No trained models available.
                   </p>
                 )}
               </div>
 
               {/* Webcam Control */}
-              <div>
-                <label className="text-sm text-stone-400 mb-1 block">Webcam</label>
+              <div className="shrink-0">
+                <label className="text-sm text-stone-400 mb-2 block h-[22px]">Webcam</label>
                 <div className="flex">
                   {!webcamActive ? (
                     <Button
@@ -550,34 +549,31 @@ const Detection: React.FC = () => {
               </div>
 
               {/* Auto-Capture */}
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col">
-                  <label className="text-sm text-stone-400 mb-1 block">
-                    {captureInterval < 300 ? '🔴 Real-time' : 'Auto'}
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={autoCapture}
-                      onChange={(e) => setAutoCapture(e.target.checked)}
-                      disabled={!webcamActive}
-                      className="rounded bg-stone-700 border-stone-600"
-                    />
-                    <input
-                      type="number"
-                      min="100"
-                      max="5000"
-                      step="100"
-                      value={captureInterval}
-                      onChange={(e) => setCaptureInterval(parseInt(e.target.value))}
-                      disabled={!webcamActive}
-                      className="input-clean w-14 text-center"
-                    />
-                    <span className="text-sm text-stone-400">ms</span>
-                  </div>
+              <div className="shrink-0">
+                <label className="text-sm text-stone-400 mb-2 block h-[22px]">
+                  {captureInterval < 300 ? '🔴 Real-time' : 'Auto'}
+                </label>
+                <div className="flex items-center gap-2 h-[42px]">
+                  <input
+                    type="checkbox"
+                    checked={autoCapture}
+                    onChange={(e) => setAutoCapture(e.target.checked)}
+                    disabled={!webcamActive}
+                    className="rounded bg-stone-700 border-stone-600"
+                  />
+                  <input
+                    type="number"
+                    min="100"
+                    max="5000"
+                    step="100"
+                    value={captureInterval}
+                    onChange={(e) => setCaptureInterval(parseInt(e.target.value))}
+                    disabled={!webcamActive}
+                    className="input-clean w-14 text-center"
+                  />
+                  <span className="text-sm text-stone-400">ms</span>
                 </div>
               </div>
-
             </div>
           </Panel>
         )}
