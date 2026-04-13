@@ -20,15 +20,15 @@ const DetectionOverlay: React.FC<DetectionOverlayProps> = ({ videoRef, detection
     
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    const ctx = canvas.getContext('2d');
     
-    if (!ctx) return;
-    
-    // Match canvas size to video
+    // Match canvas size to video element's container
     const resizeCanvas = () => {
-      const rect = video.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      const parent = video.parentElement;
+      if (parent) {
+        const rect = parent.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
     };
     
     resizeCanvas();
@@ -53,17 +53,38 @@ const DetectionOverlay: React.FC<DetectionOverlayProps> = ({ videoRef, detection
     
     if (detections.length === 0) return;
     
-    // Calculate scale factors
-    const scaleX = canvas.width / video.videoWidth;
-    const scaleY = canvas.height / video.videoHeight;
+    // Calculate the actual rendered video dimensions (accounting for object-fit: contain)
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const canvasRatio = canvas.width / canvas.height;
     
-    // Draw bounding boxes
+    let renderWidth = canvas.width;
+    let renderHeight = canvas.height;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    if (videoRatio > canvasRatio) {
+      // Video is wider than canvas - black bars on top/bottom
+      renderWidth = canvas.width;
+      renderHeight = canvas.width / videoRatio;
+      offsetY = (canvas.height - renderHeight) / 2;
+    } else {
+      // Video is taller than canvas - black bars on sides
+      renderHeight = canvas.height;
+      renderWidth = canvas.height * videoRatio;
+      offsetX = (canvas.width - renderWidth) / 2;
+    }
+    
+    // Calculate scale factors based on the actual rendered video size
+    const scaleX = renderWidth / video.videoWidth;
+    const scaleY = renderHeight / video.videoHeight;
+    
+    // Draw bounding boxes with offset
     detections.forEach((det) => {
       const bbox = det.bbox;
       if (!bbox || bbox.length < 4) return;
       
-      const x = bbox[0] * scaleX;
-      const y = bbox[1] * scaleY;
+      const x = offsetX + (bbox[0] * scaleX);
+      const y = offsetY + (bbox[1] * scaleY);
       const width = (bbox[2] - bbox[0]) * scaleX;
       const height = (bbox[3] - bbox[1]) * scaleY;
       
@@ -116,8 +137,8 @@ const Detection: React.FC = () => {
   // Webcam detection states
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
-  const [autoCapture, setAutoCapture] = useState(false);
-  const [captureInterval, setCaptureInterval] = useState<number>(500);
+  const [autoCapture, setAutoCapture] = useState(true);
+  const [captureInterval, setCaptureInterval] = useState<number>(200);
   const [webcamResult, setWebcamResult] = useState<any>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [detections, setDetections] = useState<any[]>([]);
@@ -180,6 +201,7 @@ const Detection: React.FC = () => {
       });
       setWebcamStream(stream);
       setWebcamActive(true);
+      setAutoCapture(true); // Enable real-time detection automatically
     } catch (err) {
       console.error('Error accessing webcam:', err);
       alert('Could not access webcam. Please ensure you have granted camera permissions.');
@@ -548,32 +570,6 @@ const Detection: React.FC = () => {
                 </div>
               </div>
 
-              {/* Auto-Capture */}
-              <div className="shrink-0">
-                <label className="text-sm text-stone-400 mb-2 block h-[22px]">
-                  {captureInterval < 300 ? '🔴 Real-time' : 'Auto'}
-                </label>
-                <div className="flex items-center gap-2 h-[42px]">
-                  <input
-                    type="checkbox"
-                    checked={autoCapture}
-                    onChange={(e) => setAutoCapture(e.target.checked)}
-                    disabled={!webcamActive}
-                    className="rounded bg-stone-700 border-stone-600"
-                  />
-                  <input
-                    type="number"
-                    min="100"
-                    max="5000"
-                    step="100"
-                    value={captureInterval}
-                    onChange={(e) => setCaptureInterval(parseInt(e.target.value))}
-                    disabled={!webcamActive}
-                    className="input-clean w-14 text-center"
-                  />
-                  <span className="text-sm text-stone-400">ms</span>
-                </div>
-              </div>
             </div>
           </Panel>
         )}
@@ -763,17 +759,16 @@ const Detection: React.FC = () => {
           </div>
         )}
 
-        {/* Webcam Results (Grid overlay when active) */}
+        {/* Webcam Results - Single Live Feed with Real-time Detection */}
         {activeTab === 'webcam' && webcamActive && (
-          <div className="grid grid-cols-2 gap-6" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
-            {/* Left: Live Feed with Overlay */}
-            <Panel title="Live Webcam Feed" className="h-full flex flex-col relative overflow-hidden">
-              <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 relative min-h-0">
+          <div className="h-full" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
+            <Panel title="Live Webcam Detection" className="h-full flex flex-col relative overflow-hidden">
+              <div className="flex-1 relative min-h-0 bg-stone-900/50 rounded-lg overflow-hidden border border-stone-700">
                 <video 
                   ref={webcamVideoRef}
                   autoPlay 
                   playsInline
-                  className="max-w-full max-h-full"
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
                 <DetectionOverlay 
                   videoRef={webcamVideoRef}
@@ -785,7 +780,7 @@ const Detection: React.FC = () => {
                 <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
                   <div className="flex items-center gap-2 bg-stone-900/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-stone-700">
                     <LED color="green" pulse />
-                    <span className="text-[10px] font-mono text-stone-300">LIVE FEED</span>
+                    <span className="text-[10px] font-mono text-stone-300">LIVE</span>
                   </div>
                   {fps > 0 && (
                     <div className="bg-stone-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-stone-700 text-[10px] font-mono text-green-400">
@@ -793,91 +788,34 @@ const Detection: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Detection Count Overlay */}
+                {detections.length > 0 && (
+                  <div className="absolute top-4 right-4 z-20">
+                    <div className="bg-stone-900/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-stone-700 text-[10px] font-mono text-green-400">
+                      {detections.length} {detections.length === 1 ? 'crack' : 'cracks'} detected
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Controls */}
-              <div className="mt-4 flex gap-3 shrink-0">
-                <Button 
-                  primary 
-                  className="flex-1"
-                  onClick={captureFromWebcam}
-                  disabled={isCapturing || !selectedModel}
+              <div className="mt-4 flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-stone-400 uppercase font-bold tracking-wider">Real-time Detection</span>
+                  <div className={`w-2 h-2 rounded-full ${autoCapture ? 'bg-green-500 animate-pulse' : 'bg-stone-600'}`} />
+                </div>
+                <button
+                  onClick={() => setAutoCapture(!autoCapture)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    autoCapture 
+                      ? 'bg-green-600/20 text-green-400 border border-green-600/50' 
+                      : 'bg-stone-700 text-stone-400 border border-stone-600'
+                  }`}
                 >
-                  <Camera size={18} className="inline mr-2" />
-                  {isCapturing ? 'Processing...' : 'Capture & Detect'}
-                </Button>
-                <div className="flex items-center gap-2 bg-stone-800/50 px-4 rounded-xl border border-stone-700">
-                  <span className="text-xs text-stone-500 uppercase font-bold tracking-wider">Auto</span>
-                  <input
-                    type="checkbox"
-                    checked={autoCapture}
-                    onChange={(e) => setAutoCapture(e.target.checked)}
-                    className="rounded bg-stone-700 border-stone-600 w-4 h-4"
-                  />
-                </div>
+                  {autoCapture ? 'ON' : 'OFF'}
+                </button>
               </div>
-            </Panel>
-
-            {/* Right: Detected Objects Column */}
-            <Panel title="Detection Stream" className="h-full flex flex-col">
-              {webcamResult ? (
-                <div className="h-full flex flex-col min-h-0">
-                  <div className="flex items-center justify-between mb-4 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <LED color={webcamResult.success && webcamResult.result?.success ? 'green' : 'red'} />
-                      <span className={`font-mono ${webcamResult.success && webcamResult.result?.success ? 'text-green-400' : 'text-red-400'}`}>
-                        {webcamResult.success && webcamResult.result?.success ? 'LAST RESULT' : 'ERROR'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {webcamResult.success && webcamResult.result?.success ? (
-                    <>
-                      {webcamResult.result.annotated_image ? (
-                        <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 relative min-h-0">
-                          <img 
-                            src={`${BASE_URL}/predictions/${webcamResult.result.annotated_image.replace(/\\/g, '/').split('/').pop()}`}
-                            alt="Webcam Result"
-                            className="max-w-full max-h-full object-contain"
-                            onError={(e) => {
-                              console.error('Failed to load image:', e);
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex-1 flex items-center justify-center text-stone-500 min-h-0">
-                          No detection result available
-                        </div>
-                      )}
-
-                      <div className="mt-4 text-sm text-stone-400 shrink-0 flex items-center justify-between">
-                        <span>{webcamResult.result.num_detections} cracks detected</span>
-                        <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">
-                          {autoCapture ? 'Auto-capturing' : 'Manual capture'}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center text-red-400 min-h-0">
-                      {webcamResult.result?.error || webcamResult.error || 'Detection failed'}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-stone-500 min-h-0">
-                  <Camera size={48} className="mb-4 opacity-30" />
-                  <p>Ready to detect cracks</p>
-                  <p className="text-sm mt-2">
-                    {autoCapture 
-                      ? captureInterval < 300 
-                        ? '🔴 Real-time mode: Detections appear with bounding boxes on live feed'
-                        : 'Auto-capturing enabled - results appear here with live overlay'
-                      : 'Click "Capture & Detect" or enable auto-capture for real-time detection'
-                    }
-                  </p>
-                </div>
-              )}
             </Panel>
           </div>
         )}
