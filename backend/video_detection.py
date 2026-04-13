@@ -1,5 +1,5 @@
 """
-Video prediction functions - extract frames, run predictions, compile annotated video.
+Video detection functions - extract frames, run detections, compile annotated video.
 """
 import uuid
 import time
@@ -7,7 +7,7 @@ from typing import Dict, List
 from pathlib import Path
 import cv2
 import numpy as np
-from prediction import predict_yolo
+from detection import detect_yolo
 
 
 def extract_frames(video_path: str, output_dir: str, sample_interval: int = 1) -> List[str]:
@@ -50,7 +50,7 @@ def extract_frames(video_path: str, output_dir: str, sample_interval: int = 1) -
     return frame_paths, frame_count
 
 
-def predict_video_frames(
+def detect_video_frames(
     model_path: str, 
     frame_paths: List[str], 
     model_type: str = 'yolo',
@@ -58,7 +58,7 @@ def predict_video_frames(
     progress_callback=None
 ) -> List[Dict]:
     """
-    Run prediction on each frame.
+    Run detection on each frame.
     
     Args:
         model_path: Path to trained model
@@ -68,13 +68,13 @@ def predict_video_frames(
         progress_callback: Optional callback function(frame_idx, total_frames)
     
     Returns:
-        List of prediction results for each frame
+        List of detection results for each frame
     """
     results = []
     
     for idx, frame_path in enumerate(frame_paths):
-        # Exclusively use YOLO predictor
-        result = predict_yolo(model_path, frame_path, conf)
+        # Exclusively use YOLO detector
+        result = detect_yolo(model_path, frame_path, conf)
         
         results.append({
             'frame_idx': idx,
@@ -99,7 +99,7 @@ def create_annotated_video(
     Create annotated video from processed frames.
     
     Args:
-        frame_results: List of frame prediction results
+        frame_results: List of frame detection results
         output_path: Path to save annotated video
         original_video_path: Original video to get FPS and codec info
         fps: Frame rate (if None, extracted from original video)
@@ -169,7 +169,7 @@ def create_annotated_video(
     return output_path
 
 
-def run_video_prediction(
+def run_video_detection(
     model_path: str,
     video_path: str,
     model_type: str = 'yolov26',
@@ -178,7 +178,7 @@ def run_video_prediction(
     storage: Dict = None
 ) -> str:
     """
-    Run full video prediction pipeline.
+    Run full video detection pipeline.
     
     Args:
         model_path: Path to trained model
@@ -189,18 +189,18 @@ def run_video_prediction(
         storage: Optional storage dict to save results
     
     Returns:
-        Prediction ID
+        Detection ID
     """
-    prediction_id = str(uuid.uuid4())[:8]
+    detection_id = str(uuid.uuid4())[:8]
     start_time = time.time()
     
     # Create working directory
-    work_dir = Path('./temp_video') / prediction_id
+    work_dir = Path('./temp_video') / detection_id
     frames_dir = work_dir / 'frames'
     
     try:
         # Step 1: Extract frames
-        print(f"[Video Prediction {prediction_id}] Extracting frames from: {video_path}")
+        print(f"[Video Detection {detection_id}] Extracting frames from: {video_path}")
         frame_paths, total_frames = extract_frames(
             video_path, 
             str(frames_dir), 
@@ -210,11 +210,11 @@ def run_video_prediction(
         if not frame_paths:
             raise ValueError("No frames extracted from video")
         
-        print(f"[Video Prediction {prediction_id}] Extracted {len(frame_paths)} frames from {total_frames} total")
+        print(f"[Video Detection {detection_id}] Extracted {len(frame_paths)} frames from {total_frames} total")
         
-        # Step 2: Run predictions on each frame
-        print(f"[Video Prediction {prediction_id}] Running predictions with {model_type} model")
-        frame_results = predict_video_frames(
+        # Step 2: Run detections on each frame
+        print(f"[Video Detection {detection_id}] Running detections with {model_type} model")
+        frame_results = detect_video_frames(
             model_path, 
             frame_paths, 
             model_type, 
@@ -224,9 +224,9 @@ def run_video_prediction(
         # Step 3: Create annotated video
         output_dir = Path('./predictions')
         output_dir.mkdir(exist_ok=True)
-        annotated_video_path = output_dir / f"video_pred_{prediction_id}.mp4"
+        annotated_video_path = output_dir / f"video_pred_{detection_id}.mp4"
         
-        print(f"[Video Prediction {prediction_id}] Creating annotated video")
+        print(f"[Video Detection {detection_id}] Creating annotated video")
         create_annotated_video(
             frame_results,
             str(annotated_video_path),
@@ -271,7 +271,7 @@ def run_video_prediction(
         
     except Exception as e:
         import traceback
-        print(f"[Video Prediction {prediction_id}] Error: {e}")
+        print(f"[Video Detection {detection_id}] Error: {e}")
         print(traceback.format_exc())
         
         result = {
@@ -284,11 +284,11 @@ def run_video_prediction(
     
     # Store result
     if storage is not None:
-        storage['predictions'][prediction_id] = {
-            'id': prediction_id,
+        storage['detections'][detection_id] = {
+            'id': detection_id,
             'type': 'video',
             'timestamp': time.time(),
             'result': result
         }
     
-    return prediction_id
+    return detection_id

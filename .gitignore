@@ -20,7 +20,7 @@ backend/runs/
 *.pt
 *.pth
 
-# Prediction results
+# Detection results
 backend/predictions/
 predictions/
 

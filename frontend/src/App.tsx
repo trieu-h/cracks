@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Training from './pages/Training';
-import Prediction from './pages/Prediction';
+import Detection from './pages/Detection';
 import Datasets from './pages/Datasets';
 import Models from './pages/Models';
 import Settings from './pages/Settings';
@@ -14,7 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/training" element={<Training />} />
-        <Route path="/prediction" element={<Prediction />} />
+        <Route path="/detection" element={<Detection />} />
         <Route path="/evaluation" element={<Evaluation />} />
         <Route path="/datasets" element={<Datasets />} />
         <Route path="/models" element={<Models />} />

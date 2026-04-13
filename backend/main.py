@@ -13,8 +13,8 @@ from pathlib import Path
 from storage import get_storage, storage, init_storage, save_dataset_to_db, delete_dataset_from_db
 from gpu_monitor import get_gpu_stats, monitor_gpu
 from training import start_training_session, stop_training_session
-from prediction import run_prediction, predict_yolo
-from video_prediction import run_video_prediction
+from detection import run_detection, detect_yolo
+from video_detection import run_video_detection
 from database import init_db
 from sync import discover_offline_runs
 
@@ -235,21 +235,21 @@ def list_training_sessions():
     sessions.sort(key=lambda x: x.get('start_time', 0), reverse=True)
     return sessions
 
-# ===== PREDICTION ENDPOINTS =====
+# ===== DETECTION ENDPOINTS =====
 
-@app.post("/api/prediction/upload")
-async def create_prediction_upload(
+@app.post("/api/detection/upload")
+async def create_detection_upload(
     request: Request,
     image: UploadFile = File(...),
     model_path: str = Form(...),
     model_type: str = Form('yolo'),
     conf: float = Form(0.25)
 ):
-    """Run prediction on an uploaded image."""
+    """Run detection on an uploaded image."""
     from pathlib import Path
     import shutil
     
-    print(f"Received prediction request:")
+    print(f"Received detection request:")
     print(f"  model_path: {model_path}")
     print(f"  model_type: {model_type}")
     print(f"  conf: {conf}")
@@ -270,20 +270,20 @@ async def create_prediction_upload(
         
         print(f"Saved temp file to: {temp_path}")
         
-        # Run prediction
-        prediction_id = run_prediction(str(model_path), str(temp_path), model_type, float(conf), storage)
+        # Run detection
+        detection_id = run_detection(str(model_path), str(temp_path), model_type, float(conf), storage)
         
         # Get result
-        result_data = storage['predictions'].get(prediction_id, {})
+        result_data = storage['detections'].get(detection_id, {})
         
         return {
             'success': True,
-            'prediction_id': prediction_id,
+            'detection_id': detection_id,
             'result': result_data.get('result', {})
         }
     except Exception as e:
         import traceback
-        print(f"Error during prediction: {e}")
+        print(f"Error during detection: {e}")
         print(traceback.format_exc())
         return {'success': False, 'error': str(e)}
     finally:
@@ -293,8 +293,8 @@ async def create_prediction_upload(
             print(f"Cleaned up temp file: {temp_path}")
 
 
-@app.post("/api/prediction/video")
-async def create_video_prediction(
+@app.post("/api/detection/video")
+async def create_video_detection(
     request: Request,
     video: UploadFile = File(...),
     model_path: str = Form(...),
@@ -302,11 +302,11 @@ async def create_video_prediction(
     conf: float = Form(0.25),
     sample_interval: int = Form(1)
 ):
-    """Run prediction on an uploaded video."""
+    """Run detection on an uploaded video."""
     from pathlib import Path
     import shutil
     
-    print(f"Received video prediction request:")
+    print(f"Received video detection request:")
     print(f"  model_path: {model_path}")
     print(f"  model_type: {model_type}")
     print(f"  conf: {conf}")
@@ -328,8 +328,8 @@ async def create_video_prediction(
         
         print(f"Saved temp video to: {temp_path}")
         
-        # Run video prediction
-        prediction_id = run_video_prediction(
+        # Run video detection
+        detection_id = run_video_detection(
             str(model_path), 
             str(temp_path), 
             model_type, 
@@ -339,16 +339,16 @@ async def create_video_prediction(
         )
         
         # Get result
-        result_data = storage['predictions'].get(prediction_id, {})
+        result_data = storage['detections'].get(detection_id, {})
         
         return {
             'success': True,
-            'prediction_id': prediction_id,
+            'detection_id': detection_id,
             'result': result_data.get('result', {})
         }
     except Exception as e:
         import traceback
-        print(f"Error during video prediction: {e}")
+        print(f"Error during video detection: {e}")
         print(traceback.format_exc())
         return {'success': False, 'error': str(e)}
     finally:
@@ -358,19 +358,19 @@ async def create_video_prediction(
             print(f"Cleaned up temp video file: {temp_path}")
 
 
-@app.get("/api/prediction/{prediction_id}")
-def get_prediction(prediction_id: str):
-    """Get prediction result."""
-    if prediction_id in storage['predictions']:
-        return storage['predictions'][prediction_id]
-    return {'error': 'Prediction not found'}
+@app.get("/api/detection/{detection_id}")
+def get_detection(detection_id: str):
+    """Get detection result."""
+    if detection_id in storage['detections']:
+        return storage['detections'][detection_id]
+    return {'error': 'Detection not found'}
 
-@app.get("/api/predictions")
-def list_predictions():
-    """List all predictions."""
-    predictions = list(storage['predictions'].values())
-    predictions.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-    return predictions
+@app.get("/api/detections")
+def list_detections():
+    """List all detections."""
+    detections = list(storage['detections'].values())
+    detections.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+    return detections
 
 
 @app.get("/api/models")

@@ -23,19 +23,19 @@ export const getTrainingStatus = (sessionId: string) => api.get(`/training/${ses
 export const getTrainingMetrics = (sessionId: string) => api.get(`/training/${sessionId}/metrics`);
 export const getTrainingSessions = () => api.get('/training/sessions');
 
-// Prediction
-export const runPrediction = (data: FormData) => api.post('/prediction/upload', data, {
+// Detection
+export const runDetection = (data: FormData) => api.post('/detection/upload', data, {
   headers: {
     'Content-Type': 'multipart/form-data',
   },
 });
-export const runVideoPrediction = (data: FormData) => api.post('/prediction/video', data, {
+export const runVideoDetection = (data: FormData) => api.post('/detection/video', data, {
   headers: {
     'Content-Type': 'multipart/form-data',
   },
 });
-export const getPrediction = (id: string) => api.get(`/prediction/${id}`);
-export const getPredictions = () => api.get('/predictions');
+export const getDetection = (id: string) => api.get(`/detection/${id}`);
+export const getDetections = () => api.get('/detections');
 
 // Models
 export const getModels = () => api.get('/models');

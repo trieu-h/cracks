@@ -164,11 +164,11 @@ dataset_folder/
 5. Click **Start Training**
 6. Monitor live metrics via WebSocket
 
-### 3. Run Prediction
-1. Go to **Prediction** page
+### 3. Run Detection
+1. Go to **Detection** page
 2. Select a trained model
 3. Enter the path to your test image
-4. Click **Run Prediction**
+4. Click **Run Detection**
 5. View results in 3D visualization
 
 ## API Endpoints
@@ -185,9 +185,11 @@ dataset_folder/
 - `GET /api/training/{id}/metrics` - Get training metrics
 - `GET /api/training/sessions` - List all sessions
 
-### Prediction
-- `POST /api/prediction` - Run prediction
-- `GET /api/prediction/{id}` - Get prediction result
+### Detection
+- `POST /api/detection/upload` - Run detection on image
+- `POST /api/detection/video` - Run detection on video
+- `GET /api/detection/{id}` - Get detection result
+- `GET /api/detections` - List all detections
 
 ### Models
 - `GET /api/models` - List trained models
@@ -208,7 +210,7 @@ dataset_folder/
 ├── backend/
 │   ├── main.py              # FastAPI application
 │   ├── training.py          # Training functions
-│   ├── prediction.py        # Prediction functions
+│   ├── detection.py         # Detection functions
 │   ├── gpu_monitor.py       # GPU monitoring
 │   ├── storage.py           # In-memory storage
 │   ├── requirements.txt
@@ -228,7 +230,7 @@ dataset_folder/
 │   │   └── pages/
 │   │       ├── Dashboard.tsx
 │   │       ├── Training.tsx
-│   │       ├── Prediction.tsx
+│   │       ├── Detection.tsx
 │   │       ├── Datasets.tsx
 │   │       ├── Models.tsx
 │   │       └── Settings.tsx

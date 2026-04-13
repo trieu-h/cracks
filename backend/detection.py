@@ -1,13 +1,13 @@
 """
-Prediction functions - YOLO and RF-DETR, no classes.
+Detection functions - YOLO and RF-DETR, no classes.
 """
 import uuid
 import time
 from typing import Dict, List
 from pathlib import Path
 
-def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
-    """Simple YOLO prediction with annotated image."""
+def detect_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
+    """Simple YOLO detection with annotated image."""
     try:
         from ultralytics import YOLO
         import cv2
@@ -26,9 +26,9 @@ def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
         import torch
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model.to(device)
-        print(f"Using device: {device} for YOLO prediction")
+        print(f"Using device: {device} for YOLO detection")
         
-        # Run prediction
+        # Run detection
         start_time = time.time()
         results = model(image_path, conf=conf)
         inference_time = time.time() - start_time
@@ -100,20 +100,20 @@ def predict_yolo(model_path: str, image_path: str, conf: float = 0.25) -> Dict:
             'image_path': image_path
         }
 
-def run_prediction(model_path: str, image_path: str, model_type: str = 'yolov26', 
+def run_detection(model_path: str, image_path: str, model_type: str = 'yolov26', 
                    conf: float = 0.25, storage: Dict = None) -> str:
-    """Run prediction and return prediction ID."""
-    prediction_id = str(uuid.uuid4())[:8]
+    """Run detection and return detection ID."""
+    detection_id = str(uuid.uuid4())[:8]
     
-    # Run prediction exclusively with YOLO logic
-    result = predict_yolo(model_path, image_path, conf)
+    # Run detection exclusively with YOLO logic
+    result = detect_yolo(model_path, image_path, conf)
     
     # Store result
     if storage is not None:
-        storage['predictions'][prediction_id] = {
-            'id': prediction_id,
+        storage['detections'][detection_id] = {
+            'id': detection_id,
             'timestamp': time.time(),
             'result': result
         }
     
-    return prediction_id
+    return detection_id

@@ -8,7 +8,7 @@ storage = {
     'datasets': {},           # id -> dataset_info (loaded from SQLite)
     'training_sessions': {},  # id -> session_data (loaded from SQLite)
     'models': {},            # id -> model_info
-    'predictions': {},       # id -> prediction_result
+    'detections': {},       # id -> detection_result
     'gpu_history': [],       # list of gpu stats over time
     'active_websockets': {}  # session_id -> websocket connections
 }

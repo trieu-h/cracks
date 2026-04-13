@@ -31,7 +31,7 @@ crack-detection-client/
 │   │   │   │   │   ├── __init__.py
 │   │   │   │   │   ├── datasets.py
 │   │   │   │   │   ├── training.py
-│   │   │   │   │   ├── prediction.py
+│   │   │   │   │   ├── detection.py
 │   │   │   │   │   ├── dashboard.py
 │   │   │   │   │   ├── models.py
 │   │   │   │   │   └── system.py
@@ -49,7 +49,7 @@ crack-detection-client/
 │   │   │   │   ├── rfdetr_trainer.py
 │   │   │   │   ├── callbacks.py
 │   │   │   │   └── config.py
-│   │   │   ├── prediction/
+│   │   │   ├── detection/
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── predictor.py
 │   │   │   │   ├── yolo_predictor.py
@@ -72,14 +72,14 @@ crack-detection-client/
 │   │   │   ├── training_session.py
 │   │   │   ├── dataset.py
 │   │   │   ├── checkpoint.py
-│   │   │   └── prediction.py
+│   │   │   └── detection.py
 │   │   │
 │   │   ├── schemas/                  # Pydantic Schemas
 │   │   │   ├── __init__.py
 │   │   │   ├── common.py
 │   │   │   ├── dataset.py
 │   │   │   ├── training.py
-│   │   │   ├── prediction.py
+│   │   │   ├── detection.py
 │   │   │   ├── dashboard.py
 │   │   │   └── system.py
 │   │   │
@@ -184,9 +184,9 @@ crack-detection-client/
 │   │   │   │   │   └── CheckpointManager.tsx
 │   │   │   │   └── TrainingHistory/
 │   │   │   │
-│   │   │   ├── Prediction/
+│   │   │   ├── Detection/
 │   │   │   │   ├── index.tsx
-│   │   │   │   ├── Prediction.tsx
+│   │   │   │   ├── Detection.tsx
 │   │   │   │   ├── ImageUploader.tsx
 │   │   │   │   ├── BatchProcessor.tsx
 │   │   │   │   ├── ResultsViewer.tsx
@@ -214,13 +214,13 @@ crack-detection-client/
 │   │   │   ├── useGPUStats.ts
 │   │   │   ├── useDatasets.ts
 │   │   │   ├── useModels.ts
-│   │   │   └── usePrediction.ts
+│   │   │   └── useDetection.ts
 │   │   │
 │   │   ├── services/                 # API Services
 │   │   │   ├── api.ts                # Axios instance
 │   │   │   ├── datasets.service.ts
 │   │   │   ├── training.service.ts
-│   │   │   ├── prediction.service.ts
+│   │   │   ├── detection.service.ts
 │   │   │   ├── dashboard.service.ts
 │   │   │   └── system.service.ts
 │   │   │
@@ -238,7 +238,7 @@ crack-detection-client/
 │   │   │   ├── index.ts
 │   │   │   ├── dataset.types.ts
 │   │   │   ├── training.types.ts
-│   │   │   ├── prediction.types.ts
+│   │   │   ├── detection.types.ts
 │   │   │   ├── dashboard.types.ts
 │   │   │   ├── gpu.types.ts
 │   │   │   └── api.types.ts
@@ -316,7 +316,7 @@ crack-detection-client/
 │  │  │  - Nav     │  │  ┌────────────────────────┐  │   │   │
 │  │  │  - Links   │  │  │    Page Component      │  │   │   │
 │  │  │  - Status  │  │  │  (Dashboard/Training/  │  │   │   │
-│  │  └────────────┘  │  │   Prediction/etc.)     │  │   │   │
+│  │  └────────────┘  │  │   Detection/etc.)      │  │   │   │
 │  │                  │  │                        │  │   │   │
 │  │  ┌────────────┐  │  │  - Feature Components  │  │   │   │
 │  │  │   Header   │  │  │  - Data Visualization  │  │   │   │
@@ -403,8 +403,8 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: 'prediction',
-        element: <PredictionPage />,
+        path: 'detection',
+        element: <DetectionPage />,
       },
       {
         path: 'datasets',
@@ -1423,12 +1423,12 @@ class CheckpointManager:
 
 ---
 
-## 6. Prediction Module
+## 6. Detection Module
 
 ### 6.1 Inference Pipeline
 
 ```python
-# app/core/prediction/predictor.py
+# app/core/detection/detector.py
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Union, Optional
 from pathlib import Path
@@ -1448,8 +1448,8 @@ class DetectionResult:
     area: Optional[float] = None
 
 @dataclass
-class PredictionResult:
-    """Full prediction result for an image."""
+class DetectionResult:
+    """Full detection result for an image."""
     image_path: str
     image_size: tuple
     detections: List[DetectionResult]
@@ -1487,7 +1487,7 @@ class BasePredictor(ABC):
         images: List[Union[str, Path, np.ndarray]],
         conf_threshold: float = 0.25,
         iou_threshold: float = 0.45
-    ) -> List[PredictionResult]:
+    ) -> List[DetectionResult]:
         """Run inference on a batch of images."""
         pass
     
@@ -1546,7 +1546,7 @@ class BasePredictor(ABC):
         
         return vis_image
 
-# app/core/prediction/yolo_predictor.py
+# app/core/detection/yolo_detector.py
 from ultralytics import YOLO
 import time
 from datetime import datetime
@@ -1615,7 +1615,7 @@ class YOLOPredictor(BasePredictor):
             image_path = "numpy_array"
             image_size = (image.shape[1], image.shape[0])
         
-        return PredictionResult(
+        return DetectionResult(
             image_path=image_path,
             image_size=image_size,
             detections=detections,
@@ -1629,7 +1629,7 @@ class YOLOPredictor(BasePredictor):
         images: List[Union[str, Path, np.ndarray]],
         conf_threshold: float = 0.25,
         iou_threshold: float = 0.45
-    ) -> List[PredictionResult]:
+    ) -> List[DetectionResult]:
         """Run batch inference."""
         return [
             self.predict(img, conf_threshold, iou_threshold)
@@ -1640,7 +1640,7 @@ class YOLOPredictor(BasePredictor):
 ### 6.2 Export Options
 
 ```python
-# app/core/prediction/export.py
+# app/core/detection/export.py
 import json
 import csv
 from pathlib import Path
@@ -1649,10 +1649,10 @@ from PIL import Image
 import cv2
 import xml.etree.ElementTree as ET
 
-from app.core.prediction.predictor import PredictionResult
+from app.core.detection.detector import DetectionResult
 
 class ResultsExporter:
-    """Export prediction results in various formats."""
+    """Export detection results in various formats."""
     
     def __init__(self, output_dir: Path):
         self.output_dir = Path(output_dir)
@@ -1660,8 +1660,8 @@ class ResultsExporter:
     
     def export_json(
         self,
-        results: List[PredictionResult],
-        filename: str = "predictions.json"
+        results: List[DetectionResult],
+        filename: str = "detections.json"
     ) -> Path:
         """Export results as JSON."""
         output_path = self.output_dir / filename
@@ -1693,8 +1693,8 @@ class ResultsExporter:
     
     def export_csv(
         self,
-        results: List[PredictionResult],
-        filename: str = "predictions.csv"
+        results: List[DetectionResult],
+        filename: str = "detections.csv"
     ) -> Path:
         """Export results as CSV."""
         output_path = self.output_dir / filename
@@ -1722,7 +1722,7 @@ class ResultsExporter:
     
     def export_visualizations(
         self,
-        results: List[PredictionResult],
+        results: List[DetectionResult],
         images: List[Path],
         predictor,
         filename_prefix: str = "vis"
@@ -1742,8 +1742,8 @@ class ResultsExporter:
     
     def export_coco_format(
         self,
-        results: List[PredictionResult],
-        filename: str = "predictions_coco.json"
+        results: List[DetectionResult],
+        filename: str = "detections_coco.json"
     ) -> Path:
         """Export results in COCO format."""
         output_path = self.output_dir / filename
@@ -2198,18 +2198,14 @@ Export a checkpoint
 Body: { format: "onnx|tensorrt|tflite" }
 Response: { download_url: str }
 
-## Prediction
-
-### POST /api/v1/predict
-Run prediction on single image
-Body: multipart/form-data (image file)
-Query: ?model_id=xyz&conf_threshold=0.25
-Response: PredictionResult
+## Detection
+Run detection on single image
+Response: DetectionResult
 
 ### POST /api/v1/predict/batch
 Run batch prediction
 Body: multipart/form-data (multiple images)
-Response: List[PredictionResult]
+Response: List[DetectionResult]
 
 ### POST /api/v1/predict/url
 Run prediction on image URL
@@ -2217,7 +2213,7 @@ Body: { url: str }
 Response: PredictionResult
 
 ### POST /api/v1/predict/export
-Export prediction results
+Export detection results
 Body: { results: [], format: "json|csv|coco" }
 Response: { download_url: str }
 
@@ -2688,19 +2684,19 @@ interface ErrorMessage {
 **Goals:** Inference pipeline and prediction UI
 
 **Tasks:**
-1. **Prediction Backend**
+1. **Detection Backend**
    - Implement YOLO predictor
    - Implement RF-DETR predictor
-   - Create prediction service
+   - Create detection service
    - Add batch processing
 
-2. **Prediction API**
+2. **Detection API**
    - `POST /predict` - Single image
    - `POST /predict/batch` - Batch images
    - `POST /predict/url` - URL input
    - `GET /predict/formats` - List export formats
 
-3. **Prediction UI**
+3. **Detection UI**
    - Image uploader (drag & drop)
    - Results viewer
    - Detection overlay visualization
@@ -2714,7 +2710,7 @@ interface ErrorMessage {
 
 **Deliverables:**
 - Working inference pipeline
-- Prediction UI
+- Detection UI
 - Multiple export formats
 
 ---

@@ -3,7 +3,7 @@ import { Upload, Play, RotateCcw, Image, Video, Camera, Download, AlertTriangle 
 import { Panel } from '../components/ui/Panel';
 import { Button } from '../components/ui/Button';
 import { LED } from '../components/ui/LED';
-import { runPrediction, runVideoPrediction, getModels, BASE_URL } from '../api';
+import { runDetection, runVideoDetection, getModels, BASE_URL } from '../api';
 
 // Detection overlay component for real-time bounding boxes
 interface DetectionOverlayProps {
@@ -98,22 +98,22 @@ const DetectionOverlay: React.FC<DetectionOverlayProps> = ({ videoRef, detection
   );
 };
 
-const Prediction: React.FC = () => {
+const Detection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'photo' | 'video' | 'webcam'>('photo');
   
-  // Photo prediction states
+  // Photo detection states
   const [imagePath, setImagePath] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
-  // Video prediction states
+  // Video detection states
   const [videoPath, setVideoPath] = useState('');
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [sampleInterval, setSampleInterval] = useState<number>(5);
   
   
-  // Webcam prediction states
+  // Webcam detection states
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
   const [autoCapture, setAutoCapture] = useState(false);
@@ -242,7 +242,7 @@ const Prediction: React.FC = () => {
       const startTime = performance.now();
       
       try {
-        const res = await runPrediction(formData);
+        const res = await runDetection(formData);
         setWebcamResult(res.data);
         
         // Update detections for overlay
@@ -255,7 +255,7 @@ const Prediction: React.FC = () => {
           setFps(Math.round(1000 / inferenceTime));
         }
       } catch (error) {
-        console.error('Prediction failed:', error);
+        console.error('Detection failed:', error);
       } finally {
         setIsCapturing(false);
       }
@@ -303,12 +303,12 @@ const Prediction: React.FC = () => {
 
 
       try {
-        const res = await runPrediction(formData);
+        const res = await runDetection(formData);
         setResult(res.data);
       } catch (error) {
         setResult({
           success: false,
-          error: 'Failed to run prediction'
+          error: 'Failed to run detection'
         });
       }
       setLoading(false);
@@ -325,12 +325,12 @@ const Prediction: React.FC = () => {
       formData.append('sample_interval', sampleInterval.toString());
 
       try {
-        const res = await runVideoPrediction(formData);
+        const res = await runVideoDetection(formData);
         setResult(res.data);
       } catch (error) {
         setResult({
           success: false,
-          error: 'Failed to run video prediction'
+          error: 'Failed to run video detection'
         });
       }
       setLoading(false);
@@ -387,7 +387,7 @@ const Prediction: React.FC = () => {
 
         {/* Configuration Panel */}
         {activeTab !== 'webcam' && (
-          <Panel title={`${activeTab === 'photo' ? 'Photo' : 'Video'} Prediction Configuration`}>
+          <Panel title={`${activeTab === 'photo' ? 'Photo' : 'Video'} Detection Configuration`}>
             <div className="flex items-end gap-4 flex-wrap">
               {/* Model Selection */}
               <div style={{ minWidth: '250px', flex: '1 1 250px' }}>
@@ -435,7 +435,7 @@ const Prediction: React.FC = () => {
               </div>
 
 
-              {/* Run Prediction Button */}
+              {/* Run Detection Button */}
               <div>
                 <label className="text-sm text-stone-400 mb-2 block opacity-0">Action</label>
                 <Button 
@@ -451,7 +451,7 @@ const Prediction: React.FC = () => {
                   ) : (
                     <>
                       <Play size={18} className="inline mr-2" />
-                      Run Prediction
+                      Run Detection
                     </>
                   )}
                 </Button>
@@ -582,7 +582,7 @@ const Prediction: React.FC = () => {
           </Panel>
         )}
 
-        {/* Photo Prediction Results */}
+        {/* Photo Detection Results */}
         {activeTab === 'photo' && imagePreview && (
           <div className="grid grid-cols-2 gap-6" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
             {/* Left: Original Image */}
@@ -596,7 +596,7 @@ const Prediction: React.FC = () => {
               </div>
             </Panel>
 
-            {/* Right: Prediction Result */}
+            {/* Right: Detection Result */}
             <Panel title="Detection Results" className="h-full flex flex-col">
               {result ? (
                 <div className="h-full flex flex-col min-h-0">
@@ -681,7 +681,7 @@ const Prediction: React.FC = () => {
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-stone-500 min-h-0">
                   <Upload size={48} className="mb-4 opacity-30" />
-                  <p>Click "Run Prediction" to see results</p>
+                  <p>Click "Run Detection" to see results</p>
                   <p className="text-sm mt-2">The annotated image will appear here</p>
                 </div>
               )}
@@ -689,7 +689,7 @@ const Prediction: React.FC = () => {
           </div>
         )}
 
-        {/* Video Prediction Results */}
+        {/* Video Detection Results */}
         {activeTab === 'video' && videoPreview && (
           <div className="grid grid-cols-2 gap-6" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
             {/* Left: Original Video */}
@@ -703,7 +703,7 @@ const Prediction: React.FC = () => {
               </div>
             </Panel>
 
-            {/* Right: Prediction Result */}
+            {/* Right: Detection Result */}
             <Panel title="Detection Results" className="h-full flex flex-col">
               {result ? (
                 <div className="h-full flex flex-col min-h-0">
@@ -759,7 +759,7 @@ const Prediction: React.FC = () => {
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-stone-500 min-h-0">
                   <Video size={48} className="mb-4 opacity-30" />
-                  <p>Click "Run Prediction" to process video</p>
+                  <p>Click "Run Detection" to process video</p>
                   <p className="text-sm mt-2">The annotated video will appear here after processing</p>
                 </div>
               )}
@@ -890,4 +890,4 @@ const Prediction: React.FC = () => {
   );
 };
 
-export default Prediction;
+export default Detection;
