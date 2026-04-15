@@ -43,7 +43,7 @@ dataset_directory/
 
 ## What happens if the training crashes or is stopped?
 The application is designed specifically to prevent data loss.
-- If your hardware loses power or runs out of memory, simply restart the backend server.
+- If the hardware loses power or exceeds target memory tolerances, safely restart the backend server.
 - Your previous session progress remains secure in the database.
 - Navigate to the **Training** tab, find the interrupted session, and click **Resume**. The model will load the last saved checkpoint and continue.
 
@@ -51,7 +51,7 @@ The application is designed specifically to prevent data loss.
 Yes, video processing is natively supported.
 - Go to the **Detection** tab and select a video to upload.
 - Choose a Sample Interval (e.g., skip every 5 frames) to balance processing speed with accuracy.
-- The computer will extract the frames, run the trained model to detect the cracks, and stitch a new annotated `.mp4` video back together for you to download or view.
+- The server will extract the frames, run the trained model to detect the cracks, and encode a new annotated `.mp4` video for distribution.
 
 ## Can I import a model trained outside of this app?
 Yes, using the offline sync feature. 

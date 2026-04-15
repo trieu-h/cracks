@@ -23,7 +23,7 @@ This is a full-stack web application designed to help users train YOLO models to
 
 The system utilizes an decoupled architecture separating frontend interfaces and backend processing:
 
-- **Backend Network**: Python 3.10 and FastAPI control HTTP endpoints and WebSocket streams. PyTorch relies on the physical GPU to process tensor math.
+- **Backend Network**: Python 3.10 and FastAPI control HTTP endpoints and WebSocket streams. PyTorch leverages the physical GPU for tensor processing.
 - **Storage**: A SQLite database manages relationships between imported datasets and active training cycles.
 - **Frontend Dashboard**: React 18, utilizing TailwindCSS, renders the views and requests API updates dynamically.
 - **YOLO Models**: Integrates Ultralytics frameworks specifically tailored for the YOLO Segmentation standard layout.
@@ -33,7 +33,7 @@ The system utilizes an decoupled architecture separating frontend interfaces and
 ## User Guide
 
 ### 1. Adding Datasets
-To prepare the system, tell it where your images are located.
+To begin using the application, define the location of the target dataset.
 - Navigate to the **Datasets** tab.
 - Submit the absolute path of your local images folder.
 - Execute **Import**. The backend reads your files and securely maps them into the database for selection later.
@@ -41,11 +41,11 @@ To prepare the system, tell it where your images are located.
 ### 2. Training Control
 - Open the **Training** tab.
 - Select your previously imported dataset.
-- Click **Start Training**. The server will take over the math calculation.
+- Click **Start Training**. The backend API will initiate the PyTorch training sequence.
 - The interface will display real-time charts logging progress seamlessly as the model optimizes.
 
 ### 3. Running Detection Tests
-- Has the model completed its learning phase successfully? Let's verify it.
+- Once a model successfully completes its training phase, its performance can be verified against target media.
 - Open the **Detection** tab.
 - Upload an image or video file.
 - Click **Run Detection**. The model will process the file natively and overlay precision boundaries over any structural fractures it identifies.

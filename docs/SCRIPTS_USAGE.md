@@ -1,6 +1,6 @@
 # Script Explanations
 
-This document offers brief, mid-level explanations for the primary background server services powering the application UI. You do not need developer-level expertise to understand the overall software hooks.
+This document offers a suite of high-level explanations detailing the primary background server services powering the application UI. It provides an overview of the backend processing systems.
 
 ## 1. Backend Training Pipeline (`training.py`)
 
@@ -17,9 +17,9 @@ This file manages the model's learning execution cycles.
 This file extracts and constructs video evaluations natively.
 
 **Main functions:**
-- `extract_frames`: Slices an uploaded `.mp4` into individual `.jpg` frames utilizing OpenCV.
+- `extract_frames`: Extracts individual `.jpg` frames from an uploaded `.mp4` sequence utilizing OpenCV.
 - `detect_video_frames`: Cycles through each extracted image recursively running standard YOLO evaluation predicting the coordinates of the structural faults.
-- `create_annotated_video`: Once the frames contain overlaid defect markings, the script bundles the frames back together into a final compressed `.mp4` video format suitable for playback directly inside the frontend component.
+- `create_annotated_video`: Once the frames contain overlaid defect markings, the script encodes the annotated frames into a final compressed `.mp4` video format suitable for playback directly inside the frontend component.
 
 ---
 

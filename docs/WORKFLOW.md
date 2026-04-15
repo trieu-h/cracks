@@ -14,7 +14,7 @@ This guide details the standard end-to-end workflow for using the Crack Detectio
 - Select your target dataset from the dropdown list.
 - Choose your preferred model architecture (e.g., YOLO Segmentation).
 - Adjust your basic hyperparameters, such as the number of epochs and batch size, to match your hardware capabilities.
-- Click **Start Training**. The backend server will begin the process, and you can monitor real-time charts tracking the model's loss and convergence.
+- Click **Start Training**. The backend server will initialize the training process, and you can monitor real-time charts tracking the model's loss and convergence.
 
 ## 3. Review Models
 **Navigate to the `Models` page.**
@@ -26,5 +26,5 @@ This guide details the standard end-to-end workflow for using the Crack Detectio
 **Navigate to the `Detection` page.**
 - With a trained model ready, you can now evaluate its performance.
 - Open the Detection interface and select your custom checkpoint.
-- Upload a target media file (such as a `.jpg` image or `.mp4` video).
+- Upload the target media file (such as a `.jpg` image or `.mp4` video).
 - Click **Run Detection**. The system will process the media and generate an output file with highlighted segmentation overlays perfectly mapping the detected faults!
