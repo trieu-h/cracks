@@ -51,7 +51,7 @@ The application is designed specifically to prevent data loss.
 Yes, video processing is natively supported.
 - Go to the **Detection** tab and select a video to upload.
 - Choose a Sample Interval (e.g., skip every 5 frames) to balance processing speed with accuracy.
-- The computer will extract the frames, run the AI model to detect the cracks, and stitch a new annotated `.mp4` video back together for you to download or view.
+- The computer will extract the frames, run the trained model to detect the cracks, and stitch a new annotated `.mp4` video back together for you to download or view.
 
 ## Can I import a model trained outside of this app?
 Yes, using the offline sync feature. 

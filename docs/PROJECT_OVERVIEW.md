@@ -8,7 +8,7 @@ If cracks go unnoticed, there is a significantly higher chance of unexpected sys
 
 ## Our Solution
 
-We developed a comprehensive web application featuring a vintage industrial laboratory interface. This software utilizes standard AI segmentation models to identify, track, and highlight fault propagations across images and video feeds in real-time.
+We developed a comprehensive web application featuring a vintage industrial laboratory interface. This software utilizes standard YOLO segmentation models to identify, track, and highlight fault propagations across images and video feeds in real-time.
 
 ## Dataset Preparation
 
