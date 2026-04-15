@@ -106,6 +106,9 @@ The application will open natively via your web browser (typically `http://local
 2. **Launch Routine**: Navigate to **Training**, link previous session or standard YOLOv26 node, and begin. Monitor precise PyTorch progress mapped straight over WebSockets.
 3. **Test Segments**: Swap to **Detection**, attach your video or image file, and visualize the segmented cracks.
 
+> [!TIP]
+> For a more detailed, sequenced guide crossing the UI panes explicitly, check the dedicated [WORKFLOW.md](docs/WORKFLOW.md) documentation step-by-step.
+
 ## 📋 Requirements
 - **FastAPI** (Backend framework)
 - **Ultralytics** (Deep Learning architecture base)
