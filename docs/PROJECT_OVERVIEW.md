@@ -42,13 +42,13 @@ Example Training Bounds:
 - Image Size: 640 standard mapped.
 - Optimizer: Built-in PyTorch optimizations mapped (Adam/SGD tracking).
 
-To instantiate processes or manipulate variables, invoke actions directly via the unified UI ecosystem (detailed rigorously in `DOCUMENTATION.md`).
+To instantiate processes or manipulate variables, invoke actions directly via the unified UI ecosystem (detailed rigorously in [DOCUMENTATION.md](../DOCUMENTATION.md)).
 
 ## UI
 
 The project bridges a complex Full-stack UI (FastAPI + React 18) featuring an immersive 1970s laboratory environment to systematically manage the recurrent tasks organically: Checkpoint discovery, Live Web-Socket Training Telemetry, Prediction Inspections mapping directly onto 3D simulation elements, and Dataset linking.
 
-Please consult the primary `DOCUMENTATION.md` for extended system maps.
+Please consult the primary [DOCUMENTATION.md](../DOCUMENTATION.md) for extended system maps.
 
 ## Versioning
 
@@ -67,4 +67,4 @@ Model versioning integrates live offline-sync hooks to automatically discover we
 
 ## FAQ
 
-Frequented asked question documentation can be found in `docs/FAQ.md`.
+Frequented asked question documentation can be found in [FAQ.md](FAQ.md).

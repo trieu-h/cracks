@@ -115,7 +115,7 @@ The application will open natively via your web browser (typically `http://local
 
 ## 📖 Documentation
 Detailed documentation including API reference, configurations, offline-sync mechanism, and setup is housed under:
-[docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)
+[DOCUMENTATION.md](DOCUMENTATION.md)
 
 ## 🐛 Troubleshooting
 
