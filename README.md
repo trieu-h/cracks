@@ -1,310 +1,132 @@
 # Crack Detection Laboratory
 
-A vintage industrial-style web application for training and deploying crack detection models using YOLO and RF-DETR architectures.
+A modern, comprehensive web application featuring a vintage industrial aesthetic for training and deploying YOLOv26 segmentation models to detect structural cracks in materials. This project provides a complete workflow from dataset preparation to model training, evaluation, and real-time inference using WebSocket metrics.
 
-![Version](https://img.shields.io/badge/version-1.0.0-orange)
-![License](https://img.shields.io/badge/license-MIT-green)
+## 🚀 Features
 
-## Features
+### 📊 Dashboard
+- **Real-time Metrics**: View model performance metrics and dataset tracking from latest training iterations.
+- **System Telemetry**: Live GPU monitoring (utilization, memory, temperature) and background server health.
+- **Recent Sessions**: Gallery of previous checkpoints and synchronized runs.
 
-- 🎨 **Vintage Industrial UI**: 1970s oscilloscope aesthetic with skeuomorphic design
-- 🤖 **Dual Model Support**: Train with YOLO (segmentation) or RF-DETR (detection)
-- 🔄 **Real-time Updates**: WebSocket-powered live training metrics and GPU monitoring
-- 🎮 **3D Visualization**: Three.js-powered 3D specimen viewer for crack detection results
-- 📊 **Live Monitoring**: Real-time GPU stats, temperature, and utilization
-- 📁 **Dataset Management**: Import local YOLO-format datasets
-- 🧠 **In-Memory Storage**: No database required, simple and fast
+### 🔮 Prediction
+- **Image & Video Processing**: Upload media and get instant crack detection with precise segmentation overlays.
+- **Live Camera**: Real-time evaluation support for live feeds with adjustable confidence threshold settings.
+- **3D Visualization**: Unique Three.js integration simulating cracks on 3D rendered specimens in an industrial lab context.
+- **Model Selection**: Choose between YOLO segmentation architectures natively inside the laboratory.
 
-## Tech Stack
+### 🏋️ Training
+- **Dataset Management**: 
+  - Centralized import interface parsing YOLO format structural datasets.
+  - Integration securely tracked in a native SQLite database.
+- **Hyperparameter Configuration**: Flexible configuration with batch size, worker allocations, and direct mapping options.
+- **Live Training Progress**:
+  - WebSockets transmitting loss charts and progress tracking natively in real-time.
+  - Native checkpoint resumption capabilities mapping directly from the exact epoch a crash/termination occurred.
+- **Run Syncing**: Auto-discover and parse metric logs from external `train/runs` dropped into the main `/checkpoints` hub.
+- **Complete Monitoring**: pynvml NVIDIA GPU API integration feeding live telemetry without performance overhead.
 
-### Backend
-- **FastAPI**: Modern, fast Python web framework
-- **Ultralytics YOLO**: State-of-the-art object detection and segmentation
-- **PyTorch**: Deep learning framework (supports NVIDIA CUDA and Mac M1/M2/M3)
-- **WebSocket**: Real-time bidirectional communication
-- **pynvml**: NVIDIA GPU monitoring (Linux/Windows only)
+## 📁 Project Structure
 
-### Frontend
-- **React 18**: Modern UI library
-- **TypeScript**: Type-safe development
-- **Vite**: Next-generation frontend tooling
-- **Bun**: Fast JavaScript runtime and package manager
-- **Three.js**: 3D graphics library
-- **React Three Fiber**: React renderer for Three.js
-- **Tailwind CSS**: Utility-first CSS framework
-- **Socket.io-client**: WebSocket client
+```
+crack-detection-ui/
+├── backend/                    # Python FastAPI Backend
+│   ├── main.py                 # FastAPI application & WebSockets
+│   ├── training.py             # Asynchronous PyTorch pipelines
+│   ├── detection.py            # Inference and Media Evaluation
+│   ├── database.py             # SQLite persistence tables
+│   ├── sync.py                 # Offline checkpoint auto-discovery
+│   └── requirements.txt        # Backend dependencies
+│
+├── frontend/                   # React 18 / Vite Frontend
+│   ├── src/
+│   │   ├── App.tsx             # Application router
+│   │   ├── pages/              # Views (Dashboard, Training, etc.)
+│   │   └── components/         # Skeuomorphic UI Elements
+│   ├── package.json            # Frontend dependencies
+│   └── tailwind.config.js      # Styling framework mapping
+│
+├── docs/                       # Project Documentation
+│   ├── DOCUMENTATION.md        # Complete framework documentation
+│   └── IMPLEMENTATION_PLAN.md  # Roadmap
+│
+└── README.md                   # This file
+```
 
-## Quick Start
+## 🛠️ Installation
 
 ### Prerequisites
-- Python 3.10+ (3.13+ supported with latest PyTorch)
-- Bun 1.0+
-- **For training:** 
-  - NVIDIA GPU with CUDA (Linux/Windows)
-  - Mac M1/M2/M3 (CPU training only)
+- Python 3.10 or higher
+- Bun 1.0+ (for frontend)
+- NVIDIA GPU with CUDA strongly recommended for PyTorch.
 
-### Backend Setup
+### Step-by-Step Setup
 
-#### 1. Create Virtual Environment
-
+1. **Clone or navigate to the repository directory**
+2. **Backend Setup**:
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
 
-# Activate virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
+# Activate Environment (Windows)
 venv\Scripts\activate
-```
+# Activate Environment (Mac/Linux)
+source venv/bin/activate
 
-#### 2. Install Dependencies
-
-```bash
-# Install all dependencies (includes PyTorch)
-pip install -r requirements.txt
-```
-
-**Note:** If you're using Python 3.13+, the latest PyTorch will be installed automatically. If you need specific PyTorch versions for CUDA support, install torch separately first:
-
-**For NVIDIA GPU with CUDA 11.8:**
-```bash
+# Install Priority PyTorch with CUDA 11.8+
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 pip install -r requirements.txt
 ```
-
-**For NVIDIA GPU with CUDA 12.1:**
+3. **Frontend Setup**:
 ```bash
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-pip install -r requirements.txt
-```
-
-**Note for Mac users:** The `pynvml` package (NVIDIA GPU monitoring) is not compatible with Mac. If you encounter errors, install dependencies without it:
-```bash
-pip install fastapi uvicorn python-socketio python-multipart ultralytics torch torchvision numpy pillow opencv-python pydantic pyyaml python-dateutil
-```
-
-#### 4. Configure Environment
-
-```bash
-# Copy environment file
-cp .env.example .env
-
-# Edit .env file if needed
-```
-
-#### 5. Run the Server
-
-```bash
-python main.py
-```
-
-The backend will start on `http://localhost:8000`
-
-**Backend Requirements:**
-- Python 3.10+
-- PyTorch 2.1.2
-- See `backend/requirements.txt` for full list
-- NVIDIA GPU with CUDA (optional, for GPU-accelerated training)
-- Mac M1/M2/M3 users: Training will use CPU (PyTorch MPS support not included in this version)
-
-### Frontend Setup
-
-```bash
-cd frontend
-
-# Install dependencies
+cd ../frontend
 bun install
-
-# Copy environment file
-cp .env.example .env
-
-# Run development server
-bun run dev
 ```
+4. **Configuration**: Set your `.env` variables in both frontend/backend directories as per `DOCUMENTATION.md` outlines.
 
-The frontend will start on `http://localhost:5173`
+## 🎯 Usage
 
-### Docker Setup (Alternative)
+### Starting the Laboratory
 
-```bash
-# Build and run with docker-compose
-docker-compose up --build
-
-# Backend: http://localhost:8000
-# Frontend: http://localhost:5173
-```
-
-## Usage
-
-### 1. Import a Dataset
-1. Go to **Datasets** page
-2. Enter the path to your YOLO-format dataset folder
-3. Click **Import**
-
-Dataset structure should be:
-```
-dataset_folder/
-├── train/
-│   ├── images/
-│   └── labels/
-├── val/
-│   ├── images/
-│   └── labels/
-└── data.yaml
-```
-
-### 2. Train a Model
-1. Go to **Training** page
-2. Select model type (YOLO or RF-DETR)
-3. Choose your imported dataset
-4. Configure hyperparameters (epochs, batch size, etc.)
-5. Click **Start Training**
-6. Monitor live metrics via WebSocket
-
-### 3. Run Detection
-1. Go to **Detection** page
-2. Select a trained model
-3. Enter the path to your test image
-4. Click **Run Detection**
-5. View results in 3D visualization
-
-## API Endpoints
-
-### Datasets
-- `GET /api/datasets` - List all datasets
-- `POST /api/datasets/import` - Import dataset from path
-- `DELETE /api/datasets/{id}` - Delete dataset
-
-### Training
-- `POST /api/training/start` - Start training session
-- `POST /api/training/{id}/stop` - Stop training
-- `GET /api/training/{id}/status` - Get training status
-- `GET /api/training/{id}/metrics` - Get training metrics
-- `GET /api/training/sessions` - List all sessions
-
-### Detection
-- `POST /api/detection/upload` - Run detection on image
-- `POST /api/detection/video` - Run detection on video
-- `GET /api/detection/{id}` - Get detection result
-- `GET /api/detections` - List all detections
-
-### Models
-- `GET /api/models` - List trained models
-- `GET /api/models/{id}` - Get model details
-
-### System
-- `GET /api/system/gpu` - Get GPU stats
-- `GET /api/system/health` - Health check
-
-### WebSocket
-- `ws://localhost:8000/ws/training/{id}` - Training live updates
-- `ws://localhost:8000/ws/system` - System/GPU updates
-
-## Project Structure
-
-```
-.
-├── backend/
-│   ├── main.py              # FastAPI application
-│   ├── training.py          # Training functions
-│   ├── detection.py         # Detection functions
-│   ├── gpu_monitor.py       # GPU monitoring
-│   ├── storage.py           # In-memory storage
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── frontend/
-│   ├── src/
-│   │   ├── api.ts           # API client
-│   │   ├── App.tsx          # Main application
-│   │   ├── main.tsx         # Entry point
-│   │   ├── index.css        # Styles with skeuomorphic design
-│   │   ├── components/
-│   │   │   ├── ui/          # UI components (LED, Button, Panel)
-│   │   │   └── layout/      # Layout components
-│   │   ├── hooks/
-│   │   │   └── useWebSocket.ts
-│   │   └── pages/
-│   │       ├── Dashboard.tsx
-│   │       ├── Training.tsx
-│   │       ├── Detection.tsx
-│   │       ├── Datasets.tsx
-│   │       ├── Models.tsx
-│   │       └── Settings.tsx
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── Dockerfile
-│
-├── docker-compose.yml
-└── README.md
-```
-
-## Design Philosophy
-
-This application features a **vintage industrial laboratory aesthetic** inspired by 1970s oscilloscopes and test equipment:
-
-- **Dark theme** with charcoal background (#1A1A1A)
-- **Industrial orange** accents (#FF6B35)
-- **CRT green** data displays (#00FF41)
-- **Skeuomorphic elements**: Metal panels, 3D buttons, LED indicators, analog gauges
-- **Three.js integration**: 3D specimen visualization with vintage lab lighting
-
-## Configuration
-
-### Backend (.env)
-```
-APP_NAME=Crack Detection API
-DEBUG=true
-HOST=0.0.0.0
-PORT=8000
-CORS_ORIGINS=http://localhost:5173
-CHECKPOINT_DIR=./checkpoints
-DATASET_DIR=./datasets
-```
-
-### Frontend (.env)
-```
-VITE_API_URL=http://localhost:8000/api
-VITE_WS_URL=ws://localhost:8000
-```
-
-## Development
-
-### Backend Development
+1. **Backend Initialize**:
 ```bash
 cd backend
 python main.py
 ```
 
-### Frontend Development
+2. **Frontend Launch**:
 ```bash
 cd frontend
 bun run dev
 ```
+The application will open natively via your web browser (typically `http://localhost:5173`) mapping to the backend API via `http://localhost:8000/api`.
 
-### Build for Production
-```bash
-cd frontend
-bun run build
-```
+### Quick Start Guide
+1. **Link Dataset**: Use the **Datasets** module to ingest your local structural/crack dataset YAML.
+2. **Launch Routine**: Navigate to **Training**, link previous session or standard YOLOv26 node, and begin. Monitor precise PyTorch progress mapped straight over WebSockets.
+3. **Test Segments**: Swap to **Detection**, attach your video or image file, and visualize the cracks either directly or projected over 3D simulation specimens.
 
-## Notes
+## 📋 Requirements
+- **FastAPI** (Backend framework)
+- **Ultralytics** (Deep Learning architecture base)
+- **PyTorch** 
+- **Three.js / React-Three-Fiber** (3D Mapping Integration)
+- **pynvml** (NVIDIA Metrics parsing)
 
-- **In-Memory Storage**: Data is lost when the server restarts. For production, consider adding a database.
-- **GPU Support**: 
-  - **NVIDIA GPU**: Full support with CUDA acceleration for training
-  - **Mac M1/M2/M3**: CPU training only (no GPU acceleration)
-- **Mac Limitations**: GPU monitoring (pynvml) is not available on Mac systems
-- **RF-DETR**: Currently placeholder implementation. Full support coming soon.
+## 📖 Documentation
+Detailed documentation including API reference, configurations, offline-sync mechanism, and setup is housed under:
+[docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)
 
-## License
+## 🐛 Troubleshooting
 
-MIT License - feel free to use this project for your own crack detection applications!
+1. **CUDA Mismatch**: Ensure system PyTorch version matches physical NVIDIA driver capability. Check natively using `nvidia-smi`.
+2. **Mac Limitations**: Pynvml library throws exceptions natively over Apple Silicon (M1/M2/M3) as no Nvidia GPU exists.
+3. **WebSocket Loss**: Check terminal window tracing if PyTorch exhausted VRAM resulting in an abrupt thread termination.
 
-## Acknowledgments
+## 🤝 Support & License
 
-- UI Design inspired by vintage Tektronix oscilloscopes
-- Built with love for the crack detection community
+This project implements standard MIT licensing logic frameworks. Acknowledgment provided to Ultralytics.
+
+---
+**Version**: 1.0.0
+**Last Updated**: 2026-04-15
