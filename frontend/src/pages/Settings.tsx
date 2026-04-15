@@ -53,8 +53,8 @@ const SettingsPage: React.FC = () => {
 
           <p className="text-gray-400 text-sm leading-relaxed">
             A vintage industrial-style laboratory interface for training and deploying 
-            crack detection models using YOLO and RF-DETR architectures. Features real-time 
-            GPU monitoring, WebSocket updates, and 3D visualization.
+            crack detection models using YOLO architectures. Features real-time 
+            GPU monitoring and WebSocket updates.
           </p>
 
           <div className="flex gap-4 pt-4">
@@ -77,11 +77,11 @@ const SettingsPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Framework:</span>
-                <span className="text-gray-300 ml-2">FastAPI + React + Three.js</span>
+                <span className="text-gray-300 ml-2">FastAPI + React 18</span>
               </div>
               <div>
                 <span className="text-gray-500">ML Backend:</span>
-                <span className="text-gray-300 ml-2">Ultralytics YOLO + RF-DETR</span>
+                <span className="text-gray-300 ml-2">Ultralytics YOLO</span>
               </div>
               <div>
                 <span className="text-gray-500">UI Style:</span>
@@ -89,7 +89,7 @@ const SettingsPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-gray-500">Storage:</span>
-                <span className="text-gray-300 ml-2">In-Memory (No Database)</span>
+                <span className="text-gray-300 ml-2">SQLite Database</span>
               </div>
             </div>
           </div>

@@ -5,8 +5,7 @@
 3. [How do I train the model with more images?](#how-do-i-train-the-model-with-more-images)
 4. [How do I resume an interrupted training session?](#how-do-i-resume-an-interrupted-training-session)
 5. [How are videos processed and frames extracted?](#how-are-videos-processed-and-frames-extracted)
-6. [How do I view predictions in 3D?](#how-do-i-view-predictions-in-3d)
-7. [How can I import a model trained outside of this application?](#how-can-i-import-a-model-trained-outside-of-this-application)
+6. [How can I import a model trained outside of this application?](#how-can-i-import-a-model-trained-outside-of-this-application)
 
 ---
 
@@ -61,9 +60,7 @@ You do not need external scripts or applications to evaluate videos. The laborat
 - Choose your model standard and your **Sample Interval** (how actively to skip frames to preserve processing speed).
 - The `video_detection.py` hook automatically grabs frames according to your interval, executes inferences against the GPU, dynamically patches the segments together using rigorous `H.264` codec formatting, and streams the finished file directly into your browser seamlessly!
 
-## How do I view predictions in 3D?
-- Simply run standard inference using an uploaded image via the **Detection** portal.
-- Once the segmentation mask executes in the backend and maps severity zones across the cracks, the resulting image is projected instantly onto the Three.js 3D specimen mesh running natively inside your browser. You can click and drag the mesh physically displaying the predictions directly against an industrial environment!
+
 
 ## How can I import a model trained outside of this application?
 Our application runs an automatic sync hook natively named `discover_offline_runs()`.

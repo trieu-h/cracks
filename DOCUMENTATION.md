@@ -33,7 +33,7 @@ This is a comprehensive web application designed with a vintage industrial, 1970
 - **ML Framework**: Ultralytics YOLOv11/YOLOv26, PyTorch
 - **Live Communication**: WebSocket (via FastAPI and socket.io-client)
 - **Monitoring**: pynvml (NVIDIA GPU API integration)
-- **3D Visualization**: Three.js & React Three Fiber
+
 
 ---
 
@@ -101,7 +101,7 @@ This is a comprehensive web application designed with a vintage industrial, 1970
 1. **pages/**
    - **Dashboard.tsx**: Heads-up telemetry, live GPU/Server readings, and recent session overviews.
    - **Training.tsx**: The central command interface plotting charts via websocket metrics and managing execution lifecycle.
-   - **Detection.tsx**: Dedicated file/video inspection terminal featuring advanced Three.js rendering techniques.
+   - **Detection.tsx**: Dedicated file/video inspection terminal.
    - **Datasets.tsx**: Directory ingestion interface strictly capturing `.yaml` mappings.
    - **Models.tsx**: Checkpoint gallery and synchronization control layout.
 
@@ -193,7 +193,7 @@ bun install
 **Features**:
 - Evaluates `.jpg, .png, .mp4`.
 - Dynamic confidence sliders (optional configurations based on recent UI adjustments logic).
-- Output mapped directly onto a virtual simulated Three.js 3D framework if requested.
+
 
 ---
 

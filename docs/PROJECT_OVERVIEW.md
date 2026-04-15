@@ -46,7 +46,7 @@ To instantiate processes or manipulate variables, invoke actions directly via th
 
 ## UI
 
-The project bridges a complex Full-stack UI (FastAPI + React 18) featuring an immersive 1970s laboratory environment to systematically manage the recurrent tasks organically: Checkpoint discovery, Live Web-Socket Training Telemetry, Prediction Inspections mapping directly onto 3D simulation elements, and Dataset linking.
+The project bridges a complex Full-stack UI (FastAPI + React 18) featuring an immersive 1970s laboratory environment to systematically manage the recurrent tasks organically: Checkpoint discovery, Live Web-Socket Training Telemetry, Prediction Inspections, and Dataset linking.
 
 Please consult the primary [DOCUMENTATION.md](../DOCUMENTATION.md) for extended system maps.
 

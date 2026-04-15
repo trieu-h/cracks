@@ -12,7 +12,7 @@ A modern, comprehensive web application featuring a vintage industrial aesthetic
 ### 🔮 Prediction
 - **Image & Video Processing**: Upload media and get instant crack detection with precise segmentation overlays.
 - **Live Camera**: Real-time evaluation support for live feeds with adjustable confidence threshold settings.
-- **3D Visualization**: Unique Three.js integration simulating cracks on 3D rendered specimens in an industrial lab context.
+
 - **Model Selection**: Choose between YOLO segmentation architectures natively inside the laboratory.
 
 ### 🏋️ Training
@@ -104,13 +104,13 @@ The application will open natively via your web browser (typically `http://local
 ### Quick Start Guide
 1. **Link Dataset**: Use the **Datasets** module to ingest your local structural/crack dataset YAML.
 2. **Launch Routine**: Navigate to **Training**, link previous session or standard YOLOv26 node, and begin. Monitor precise PyTorch progress mapped straight over WebSockets.
-3. **Test Segments**: Swap to **Detection**, attach your video or image file, and visualize the cracks either directly or projected over 3D simulation specimens.
+3. **Test Segments**: Swap to **Detection**, attach your video or image file, and visualize the segmented cracks.
 
 ## 📋 Requirements
 - **FastAPI** (Backend framework)
 - **Ultralytics** (Deep Learning architecture base)
 - **PyTorch** 
-- **Three.js / React-Three-Fiber** (3D Mapping Integration)
+
 - **pynvml** (NVIDIA Metrics parsing)
 
 ## 📖 Documentation
