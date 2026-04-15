@@ -1,43 +1,38 @@
-# Crack Detection App Overview
+# Crack Detection Project Overview
 
-## The Problem
+## Problem Statement
 
-Large buildings, bridges, and big machines often suffer from cracks over time due to weather and stress. Finding and fixing these cracks usually means sending a human to inspect them by hand. This can be slow, dangerous, and sometimes people miss small details. 
+Large structures, machinery, and physical foundations constantly suffer from surface degradation and structural cracking due to extreme environments and continuous stress. Identifying and repairing these fractures relies heavily on manual human inspection procedures. These practices are often slow, hazardous, and prone to subjective oversight, particularly in hard-to-reach locations.
 
-If cracks are missed, machines and buildings can break unexpectedly, costing a lot of money and causing delays.
+If cracks go unnoticed, there is a significantly higher chance of unexpected system failures, extensive repair downtimes, and shortened hardware lifespans.
 
-## The Solution
+## Our Solution
 
-We created an easy-to-use smart laboratory application. This app uses Artificial Intelligence (AI) to automatically look at pictures or videos and find cracks in real-time. It draws clear, colored outlines over the damage so you know exactly where the problems are.
+We developed a comprehensive web application featuring a vintage industrial laboratory interface. This software utilizes standard AI segmentation models to identify, track, and highlight fault propagations across images and video feeds in real-time.
 
-## How the AI Learns (Data)
+## Dataset Preparation
 
-To make the AI smart, we feed it pictures of cracks. These pictures are called "Datasets".
-- The AI requires a specific folder structure (called the YOLO layout).
-- You can find free pictures of cracks from public websites, or add your own private photos from drones and cameras.
-- The app organizes these pictures so the AI knows exactly where the cracks are drawn.
+Training a reliable model requires standardized datasets of cracked surfaces.
+- We support the standard **Ultralytics YOLO** folder architecture.
+- Users can import public datasets or integrate proprietary images captured from drone infrastructure inspections.
+- By utilizing advanced segmentation (polygon outlines) rather than simple bounding boxes, the system accurately maps the precise branching of complex fractures.
 
-## The AI Brain (Model Training)
+## Model Training
 
-We use a very fast and accurate AI model called **YOLO Segmentation**. It's designed to run quickly, even on small computers like a Raspberry Pi. 
+The pipeline strictly revolves around the **YOLO Segmentation** family (e.g., YOLOv11/YOLOv26). These models are highly optimized to run quickly on edge devices, such as a Raspberry Pi 5 or embedded NVidia Jetsons, without sacrificing deep accuracy.
 
-The AI looks at the images you give it and learns over multiple rounds (called Epochs). You can monitor this learning process directly from the app interface without needing to understand code (see [DOCUMENTATION.md](../DOCUMENTATION.md)).
+The standard procedure involves selecting hyperparameters (Epochs, Batch Size) via the frontend, which the FastAPI backend translates into a PyTorch execution sequence. The progress is relayed visually back to the user via WebSockets in real-time.
 
-## The Application Interface
+## Application Interface
 
-The app is designed to look like a vintage science laboratory from the 1970s. It makes complex tasks easy:
-- **Datasets**: Easily load pictures into the app.
-- **Training**: Teach the AI with a single click and watch it learn on live charts.
-- **Models**: Check your past AI brains and their scores.
-- **Detection**: Upload a new picture or video and let the AI find the cracks for you.
+The project offers a Full-Stack UI built with React 18 and FastAPI. Its core features include:
+- **Datasets**: Simple ingestion workflows for scanning folders.
+- **Training**: Centralized control for executing and pausing PyTorch sessions.
+- **Models**: History tables mapping the final metrics and overall model fitness.
+- **Detection**: Target inspection screens to evaluate specific images or videos using saved model versions.
 
-## Looking Forward
+For a comprehensive layout of the architecture, please consult the [DOCUMENTATION.md](../DOCUMENTATION.md).
 
-In the future, we plan to:
-- Make the app run entirely on small drones for instant live checking.
-- Teach the AI to detect other issues like rust and peeling paint.
-- Add cloud features so teams can share AI results online.
+## FAQ
 
-## Questions?
-
-If you have any questions, please check the [FAQ.md](FAQ.md).
+Frequented asked question documentation can be found in [FAQ.md](FAQ.md).

@@ -1,62 +1,60 @@
 # FAQ - Frequently Asked Questions
 
-1. [How do I add a new dataset of images?](#how-do-i-add-a-new-dataset-of-images)
-2. [How should my folders and files be organized?](#how-should-my-folders-and-files-be-organized)
-3. [How do I teach the AI with more images?](#how-do-i-teach-the-ai-with-more-images)
-4. [What happens if the training crashes or stops?](#what-happens-if-the-training-crashes-or-stops)
-5. [Can I test the AI on videos?](#can-i-test-the-ai-on-videos)
-6. [Can I bring in a model trained by someone else?](#can-i-bring-in-a-model-trained-by-someone-else)
+1. [How do I import a new dataset?](#how-do-i-import-a-new-dataset)
+2. [How should my dataset folders be structured?](#how-should-my-dataset-folders-be-structured)
+3. [How do I train the model with new images?](#how-do-i-train-the-model-with-new-images)
+4. [What happens if the training crashes or is stopped?](#what-happens-if-the-training-crashes-or-is-stopped)
+5. [Can I test the model on video files?](#can-i-test-the-model-on-video-files)
+6. [Can I import a model trained outside of this app?](#can-i-import-a-model-trained-outside-of-this-app)
 
 ---
 
-## How do I add a new dataset of images?
-The app needs your images to be on the same computer where the app is running.
-- Put your image folder on your computer.
-- Click on the **Datasets** tab in the app.
-- Type in the location of your folder (like `./datasets/my-cracks/`).
-- Click **Import**. The app will do the rest of the work and organize your images for the AI automatically.
+## How do I import a new dataset?
+Your dataset must be located on the same physical machine running the backend application.
+- Place your dataset folder anywhere on your computer.
+- Click on the **Datasets** tab in the UI.
+- Enter the location path to your folder (for example: `./datasets/crack-data/`).
+- Click **Import**. The system will index the images and save the configuration to the local database.
 
-## How should my folders and files be organized?
-The app requires your folders to follow the standard **YOLO format**. 
+## How should my dataset folders be structured?
+The system adheres to the standard **YOLO format**. 
 
-**Here is what your folder should look like:**
+**Required Folder Layout:**
 ```text
-my_dataset_folder/
+dataset_directory/
 ├── data.yaml
 ├── train/
-│   ├── images/  (Put training pictures here)
-│   └── labels/  (Put training label text files here)
+│   ├── images/
+│   └── labels/
 └── val/
     ├── images/
     └── labels/
 ```
 
-**Label format:**
-- Every image should have a text file (`.txt`) with the exact same name.
-- If an image doesn't have any cracks in it, you don't need a `.txt` file at all. The AI will learn that this image is completely safe.
+**Label Rules:**
+- Every image requires a matching text file (`.txt`) in the labels folder.
+- If an image has no cracks, do not include a label file. The model will automatically treat it as a negative background image.
 
-## How do I teach the AI with more images?
-- Gather new pictures of cracks and draw outlines around them using an annotation tool (save them in the YOLO format).
-- Update your dataset folder on the computer, then click import on the **Datasets** tab.
-- Go to the **Training** tab.
-- Choose a model.
-- Click **Start Training** to watch the app update its learning in real-time!
+## How do I train the model with new images?
+- Annotate your new images using any standard tool and export them in the YOLO format.
+- Update your dataset directory with the new images, then re-import or verify it on the **Datasets** tab.
+- Navigate to the **Training** tab and select the dataset.
+- Click **Start Training** to monitor the progress via the live UI charts.
 
-## What happens if the training crashes or stops?
-Don't worry! 
-- If your computer turns off or the training stops unexpectedly, restart the app.
-- The previous training session is saved securely.
-- Go to the **Training** tab, find your stopped session, and click **Resume**.
-- The AI will pick up right where it left off!
+## What happens if the training crashes or is stopped?
+The application is designed specifically to prevent data loss.
+- If your hardware loses power or runs out of memory, simply restart the backend server.
+- Your previous session progress remains secure in the database.
+- Navigate to the **Training** tab, find the interrupted session, and click **Resume**. The model will load the last saved checkpoint and continue.
 
-## Can I test the AI on videos?
-Yes! You don't need any other software.
-- Go to the **Detection** tab and choose to upload a Video.
-- Pick how many frames to skip to make processing faster (this is called the Sample Interval).
-- The app will grab frames from the video, find the cracks, color them, and stitch the video back together so you can watch the result. 
+## Can I test the model on video files?
+Yes, video processing is natively supported.
+- Go to the **Detection** tab and select a video to upload.
+- Choose a Sample Interval (e.g., skip every 5 frames) to balance processing speed with accuracy.
+- The computer will extract the frames, run the AI model to detect the cracks, and stitch a new annotated `.mp4` video back together for you to download or view.
 
-## Can I bring in a model trained by someone else?
-Yes! 
-- If someone else trained a model, simply ask them for the result folder (it usually contains files like `results.csv`, `args.yaml` and a `.pt` weights file).
-- Drop this folder into the `./checkpoints` directory on your computer.
-- Open the app, and it will automatically find the new model and add it to your history.
+## Can I import a model trained outside of this app?
+Yes, using the offline sync feature. 
+- Obtain the results folder from the external training session (ensure it contains `results.csv`, `args.yaml` and the `.pt` weight file).
+- Move this folder into the `./checkpoints` directory of your backend backend environment.
+- Open the application and click **Sync Local Models**. The app will parse the external metrics and map it into your dashboard history.

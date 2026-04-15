@@ -1,31 +1,31 @@
-# Developer Scripts (Simple Explanations)
+# Script Explanations
 
-This file explains the invisible background scripts that make the app work. You do not need to read this to use the app! This is just for people who want to understand the code.
+This document offers brief, mid-level explanations for the primary background server services powering the application UI. You do not need developer-level expertise to understand the overall software hooks.
 
-## 1. The Training Script (`training.py`)
+## 1. Backend Training Pipeline (`training.py`)
 
-This file is responsible for teaching the AI.
+This file manages the model's learning execution cycles.
 
-**What it does:**
-- `start_training_session`: This is like the "Start" button under the hood. It prepares the AI, collects your settings, and tells your computer's graphics card to start learning. It runs in the background so you can click other buttons on the screen without freezing the app.
-- `stop_training_session`: This safely pauses the AI if you hit STOP, making sure no files get corrupted or broken.
-
----
-
-## 2. The Video Testing Script (`video_detection.py`)
-
-This file is responsible for testing your videos.
-
-**What it does:**
-- `extract_frames`: Video files are just thousands of pictures played very fast. This script chops your video up into individual pictures so the AI can look at them easily. To save time, you can tell it to skip pictures (like only checking every 5th picture).
-- `detect_video_frames`: This hands every chopped picture to the AI and asks, "Where is the crack?"
-- `create_annotated_video`: Once the AI colors the cracks, this script glues all the chopped pictures back together into a brand new video for you to watch!
+**Main functions:**
+- `start_training_session`: Triggers the training sequence. It parses your GUI variables (epochs, batch size), establishes a unique session ID, and safely pushes execution off the main application thread to prevent UI freezing.
+- `stop_training_session`: This function securely interrupts an active run. Upon receiving a stop signal, it halts the model gracefully ensuring the generated weight components `.pt` are not corrupted.
 
 ---
 
-## 3. The Sync Script (`sync.py`)
+## 2. Video Parsing Pipeline (`video_detection.py`)
 
-This file is responsible for finding lost models.
+This file extracts and constructs video evaluations natively.
 
-**What it does:**
-- `discover_offline_runs`: If your friend teaches an AI on their computer and emails you the folder, this script notices when you drop it in the app's folder. It automatically reads the files and adds the model to your history so you can see their scores.
+**Main functions:**
+- `extract_frames`: Slices an uploaded `.mp4` into individual `.jpg` frames utilizing OpenCV.
+- `detect_video_frames`: Cycles through each extracted image recursively running standard YOLO evaluation predicting the coordinates of the structural faults.
+- `create_annotated_video`: Once the frames contain overlaid defect markings, the script bundles the frames back together into a final compressed `.mp4` video format suitable for playback directly inside the frontend component.
+
+---
+
+## 3. The Offline Synchronization Hook (`sync.py`)
+
+This file is responsible for finding lost or externally trained records.
+
+**Main functions:**
+- `discover_offline_runs`: If you share or transfer completed runs between colleagues externally, you can simply paste the directory structures directly into the project `/checkpoints` hub. This script scans the folder contents, parses standard `results.csv` outputs, and integrates the external history logs natively into your app interface without needing to manually map it.
