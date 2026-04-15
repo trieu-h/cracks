@@ -1,135 +1,90 @@
 # Crack Detection Laboratory
 
-A modern, comprehensive web application featuring a vintage industrial aesthetic for training and deploying YOLOv26 segmentation models to detect structural cracks in materials. This project provides a complete workflow from dataset preparation to model training, evaluation, and real-time inference using WebSocket metrics.
+Welcome to the Crack Detection Laboratory! This is a simple, easy-to-use application designed to look like a vintage 1970s laboratory. It helps you train an Artificial Intelligence (AI) to automatically find cracks in buildings, bridges, and machines.
 
 ## 🚀 Features
 
 ### 📊 Dashboard
-- **Real-time Metrics**: View model performance metrics and dataset tracking from latest training iterations.
-- **System Telemetry**: Live GPU monitoring (utilization, memory, temperature) and background server health.
-- **Recent Sessions**: Gallery of previous checkpoints and synchronized runs.
+- **Live Numbers**: Watch the AI learn in real-time.
+- **Computer Health**: See how hard your computer is working (checks temperature and memory).
+- **History**: Look back at all the AI models you have trained in the past.
 
-### 🔮 Prediction
-- **Image & Video Processing**: Upload media and get instant crack detection with precise segmentation overlays.
-- **Live Camera**: Real-time evaluation support for live feeds with adjustable confidence threshold settings.
+### 🔮 Finding Cracks (Prediction)
+- **Pictures & Videos**: Upload your files and the AI will color over the cracks instantly!
+- **Live Camera**: Connect a camera to see the AI find cracks in real-time.
+- **Model Choice**: Switch between different AI brains you have trained.
 
-- **Model Selection**: Choose between YOLO segmentation architectures natively inside the laboratory.
+### 🏋️ Teaching the AI (Training)
+- **Manage Pictures**: Easily group and save folders of crack pictures.
+- **Simple Settings**: Change how fast or how detailed you want the AI to learn.
+- **Live Tracking**: See simple charts that show you exactly how smart the AI is getting.
+- **Safety Resume**: If your computer turns off by mistake, the AI remembers everything and can continue exactly where it left off!
 
-### 🏋️ Training
-- **Dataset Management**: 
-  - Centralized import interface parsing YOLO format structural datasets.
-  - Integration securely tracked in a native SQLite database.
-- **Hyperparameter Configuration**: Flexible configuration with batch size, worker allocations, and direct mapping options.
-- **Live Training Progress**:
-  - WebSockets transmitting loss charts and progress tracking natively in real-time.
-  - Native checkpoint resumption capabilities mapping directly from the exact epoch a crash/termination occurred.
-- **Run Syncing**: Auto-discover and parse metric logs from external `train/runs` dropped into the main `/checkpoints` hub.
-- **Complete Monitoring**: pynvml NVIDIA GPU API integration feeding live telemetry without performance overhead.
+## 📁 How the Files are Organized
 
-## 📁 Project Structure
-
-```
+```text
 crack-detection-ui/
-├── backend/                    # Python FastAPI Backend
-│   ├── main.py                 # FastAPI application & WebSockets
-│   ├── training.py             # Asynchronous PyTorch pipelines
-│   ├── detection.py            # Inference and Media Evaluation
-│   ├── database.py             # SQLite persistence tables
-│   ├── sync.py                 # Offline checkpoint auto-discovery
-│   └── requirements.txt        # Backend dependencies
-│
-├── frontend/                   # React 18 / Vite Frontend
-│   ├── src/
-│   │   ├── App.tsx             # Application router
-│   │   ├── pages/              # Views (Dashboard, Training, etc.)
-│   │   └── components/         # Skeuomorphic UI Elements
-│   ├── package.json            # Frontend dependencies
-│   └── tailwind.config.js      # Styling framework mapping
-│
-├── docs/                       # Project Documentation
-│   ├── DOCUMENTATION.md        # Complete framework documentation
-│   └── IMPLEMENTATION_PLAN.md  # Roadmap
-│
-└── README.md                   # This file
+├── backend/                    # The brain behind the app (Python)
+├── frontend/                   # What you see on the screen (React)
+├── docs/                       # Help guides and manuals
+└── README.md                   # This file!
 ```
 
-## 🛠️ Installation
+## 🛠️ How to Install
 
-### Prerequisites
-- Python 3.10 or higher
-- Bun 1.0+ (for frontend)
-- NVIDIA GPU with CUDA strongly recommended for PyTorch.
+### What you need:
+- **Python** (version 3.10 or higher)
+- **Bun** (version 1.0 or higher)
+- **A modern computer** (An NVIDIA graphics card is recommended for faster learning).
 
-### Step-by-Step Setup
+### Setup Steps:
 
-1. **Clone or navigate to the repository directory**
-2. **Backend Setup**:
+1. **Download this folder** to your computer.
+2. **Setup the Brain (Backend)**:
 ```bash
 cd backend
 python -m venv venv
 
-# Activate Environment (Windows)
+# Windows Users:
 venv\Scripts\activate
-# Activate Environment (Mac/Linux)
+# Mac/Linux Users:
 source venv/bin/activate
 
-# Install Priority PyTorch with CUDA 11.8+
+# Install the necessary files:
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 pip install -r requirements.txt
 ```
-3. **Frontend Setup**:
+3. **Setup the Screen (Frontend)**:
 ```bash
 cd ../frontend
 bun install
 ```
-4. **Configuration**: Set your `.env` variables in both frontend/backend directories as per `DOCUMENTATION.md` outlines.
 
-## 🎯 Usage
+## 🎯 How to Start the App
 
-### Starting the Laboratory
-
-1. **Backend Initialize**:
+1. **Start the Brain**:
 ```bash
 cd backend
 python main.py
 ```
 
-2. **Frontend Launch**:
+2. **Start the Screen**:
 ```bash
 cd frontend
 bun run dev
 ```
-The application will open natively via your web browser (typically `http://localhost:5173`) mapping to the backend API via `http://localhost:8000/api`.
+Open your web browser and go to `http://localhost:5173`. 
 
 ### Quick Start Guide
-1. **Link Dataset**: Use the **Datasets** module to ingest your local structural/crack dataset YAML.
-2. **Launch Routine**: Navigate to **Training**, link previous session or standard YOLOv26 node, and begin. Monitor precise PyTorch progress mapped straight over WebSockets.
-3. **Test Segments**: Swap to **Detection**, attach your video or image file, and visualize the segmented cracks.
+1. **Add Pictures**: Use the **Datasets** tab to add a folder of crack pictures.
+2. **Teach the AI**: Go to the **Training** tab, select your pictures, and click start.
+3. **Test It**: Go to the **Detection** tab, upload a video, and watch the AI find the cracks!
 
 > [!TIP]
-> For a more detailed, sequenced guide crossing the UI panes explicitly, check the dedicated [WORKFLOW.md](docs/WORKFLOW.md) documentation step-by-step.
+> For a more detailed step-by-step guide on how to use the app, check the [WORKFLOW.md](docs/WORKFLOW.md) file.
 
-## 📋 Requirements
-- **FastAPI** (Backend framework)
-- **Ultralytics** (Deep Learning architecture base)
-- **PyTorch** 
+## 📖 Help & Guides
+If you want to read more about how the app works, please read the [DOCUMENTATION.md](DOCUMENTATION.md).
 
-- **pynvml** (NVIDIA Metrics parsing)
-
-## 📖 Documentation
-Detailed documentation including API reference, configurations, offline-sync mechanism, and setup is housed under:
-[DOCUMENTATION.md](DOCUMENTATION.md)
-
-## 🐛 Troubleshooting
-
-1. **CUDA Mismatch**: Ensure system PyTorch version matches physical NVIDIA driver capability. Check natively using `nvidia-smi`.
-2. **Mac Limitations**: Pynvml library throws exceptions natively over Apple Silicon (M1/M2/M3) as no Nvidia GPU exists.
-3. **WebSocket Loss**: Check terminal window tracing if PyTorch exhausted VRAM resulting in an abrupt thread termination.
-
-## 🤝 Support & License
-
-This project is proprietary and operates under a strict **End-User License Agreement (EULA)** that permits local usage, but strictly prohibits unapproved distributions or derivative modifications. Please review the [LICENSE](LICENSE) file for exact boundaries. Acknowledgment provided to Ultralytics.
-
----
-**Version**: 1.0.0
-**Last Updated**: 2026-04-15
+## 🤝 Rules of Use
+This project is private. Please review the [LICENSE](LICENSE) file to see the rules about using this software.

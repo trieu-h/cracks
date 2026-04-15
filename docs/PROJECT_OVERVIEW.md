@@ -1,70 +1,43 @@
-# Crack Segmentation Model Overview
+# Crack Detection App Overview
 
-## Business Understanding
+## The Problem
 
-### Problem Statement
+Large buildings, bridges, and big machines often suffer from cracks over time due to weather and stress. Finding and fixing these cracks usually means sending a human to inspect them by hand. This can be slow, dangerous, and sometimes people miss small details. 
 
-Extreme environments, continuous loads, and stress expose critical physical structures, machinery, and foundations to continuous surface degradation and structural cracking. Identifying and repairing these micro/macro fractures relies heavily on manual human inspection procedures, which can be hazardously slow and prone to subjective oversight, especially in hard-to-reach locations.
+If cracks are missed, machines and buildings can break unexpectedly, costing a lot of money and causing delays.
 
-This leads to a dramatically higher chance of unexpected catastrophic failures, extensive repair downtime, and shortened equipment lifespans across the board.
+## The Solution
 
-### Goal
+We created an easy-to-use smart laboratory application. This app uses Artificial Intelligence (AI) to automatically look at pictures or videos and find cracks in real-time. It draws clear, colored outlines over the damage so you know exactly where the problems are.
 
-Creating an autonomous structural treatment and monitoring ecosystem utilizing modern AI segmentation models (mapped through a robust laboratory UI) to identify, track, and interact with crack propagations in real-time.
+## How the AI Learns (Data)
 
-## Data Acquisition & Understanding & Preparation
+To make the AI smart, we feed it pictures of cracks. These pictures are called "Datasets".
+- The AI requires a specific folder structure (called the YOLO layout).
+- You can find free pictures of cracks from public websites, or add your own private photos from drones and cameras.
+- The app organizes these pictures so the AI knows exactly where the cracks are drawn.
 
-### Public Data
+## The AI Brain (Model Training)
 
-Public datasets (e.g., from Roboflow or Kaggle) tracking concrete/metal crack segmentations are localized physically.
+We use a very fast and accurate AI model called **YOLO Segmentation**. It's designed to run quickly, even on small computers like a Raspberry Pi. 
 
-Dataset architecture necessitates utilizing the Ultralytics layout. The UI features a pipeline strictly looking for properly scaled `data.yaml` files bridging `train/val/test` arrays naturally, without requiring external script converters.
+The AI looks at the images you give it and learns over multiple rounds (called Epochs). You can monitor this learning process directly from the app interface without needing to understand code (see [DOCUMENTATION.md](../DOCUMENTATION.md)).
 
-Directory: `./datasets`
+## The Application Interface
 
-### Proprietary Data
+The app is designed to look like a vintage science laboratory from the 1970s. It makes complex tasks easy:
+- **Datasets**: Easily load pictures into the app.
+- **Training**: Teach the AI with a single click and watch it learn on live charts.
+- **Models**: Check your past AI brains and their scores.
+- **Detection**: Upload a new picture or video and let the AI find the cracks for you.
 
-Proprietary field images integrate specific real-world stress scenarios. Proprietary drone or internal structural footage is actively unpacked frame-by-frame. 
+## Looking Forward
 
-Data processing handles:
-- Utilizing segmentation interfaces assigning precise polygon boundaries over complex branching fractures rather than simple bounding boxes.
-- Normalizing directories strictly towards the `yolo26`/`yolo11n-seg` input parameters. 
+In the future, we plan to:
+- Make the app run entirely on small drones for instant live checking.
+- Teach the AI to detect other issues like rust and peeling paint.
+- Add cloud features so teams can share AI results online.
 
-## Model Training
+## Questions?
 
-Pre-loaded variants revolving around **YOLOv26/YOLO11 Segmentation** architectures were strictly integrated as they drastically optimize real-time performance on edge endpoints (such as a Raspberry Pi 5 or embedded NVidia Jetsons). 
-
-The initial pipeline trains specifically on one unified class: `crack`. Additional material variations can be added seamlessly via the dataset parser.
-
-Example Training Bounds:
-- Epochs: Adjustable up to 200 via the Training Interface.
-- Batch Size: 16 (Dynamic scaling supported depending on GPU limits).
-- Image Size: 640 standard mapped.
-- Optimizer: Built-in PyTorch optimizations mapped (Adam/SGD tracking).
-
-To instantiate processes or manipulate variables, invoke actions directly via the unified UI ecosystem (detailed rigorously in [DOCUMENTATION.md](../DOCUMENTATION.md)).
-
-## UI
-
-The project bridges a complex Full-stack UI (FastAPI + React 18) featuring an immersive 1970s laboratory environment to systematically manage the recurrent tasks organically: Checkpoint discovery, Live Web-Socket Training Telemetry, Prediction Inspections, and Dataset linking.
-
-Please consult the primary [DOCUMENTATION.md](../DOCUMENTATION.md) for extended system maps.
-
-## Versioning
-
-Active checkpoints maintain two-point persistence: 
-1. SQLite Database map caching metrics and historical logs natively.
-2. Directly exported `.pt` matrices saved sequentially within `/checkpoints` and `runs/segment/train` local hubs.
-
-Model versioning integrates live offline-sync hooks to automatically discover weights synthesized outside of the UI terminal organically.
-
-## Future Improvements
-
-- Deploy integrated pipeline directly onto a Raspberry Pi 5 standard kit.
-- Optimization scaling specific for headless real-time analysis against drone/robotic feeds.
-- Broaden target classes: Spalling, Delamination, Micro-Fissures.
-- Cloud DB integration expanding beyond localized SQLite restrictions.
-
-## FAQ
-
-Frequented asked question documentation can be found in [FAQ.md](FAQ.md).
+If you have any questions, please check the [FAQ.md](FAQ.md).

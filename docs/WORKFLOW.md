@@ -1,32 +1,31 @@
-# Standard Application Workflow
+# How to Use the App (Step-by-Step)
 
-This document outlines the standard end-to-end sequence for utilizing the Crack Detection Laboratory efficiently, starting from data ingestion down to target predictions.
+This guide takes you through the step-by-step process of using the Crack Detection Laboratory. You will learn how to add pictures of cracks, train the AI model, and test it to see the results.
 
-## 1. Dataset Import
-**Navigate to the `Datasets` page.**
-- First, format your cracked images and labels into standard Ultralytics YOLO segmentation directory structures locally.
-- Enter the explicit path to your local dataset directory interface (e.g., `./datasets/crack_data/`).
-- Click **Import**. The system will scan the folder, fetch the `data.yaml` variables, and safely record the dataset into your internal SQLite database list.
+## 1. Add Your Images (Dataset Import)
+**Go to the `Datasets` page.**
+- First, make sure you have a folder on your computer with your crack pictures and their labels. The folder needs to be in a specific layout (the YOLO format).
+- Type in the folder path (for example, `./datasets/crack_data/`).
+- Click **Import**. The app reads your folder and saves it into the system so the AI can use it to learn.
 
-## 2. Launch Training
-**Navigate to the `Training` page.**
-- Once dataset ingestion confirms successfully, shift to the Training portal.
-- Select your target dataset from the dropdown menu (it should appear dynamically).
-- Pick one of the two native backbone architectures tailored for segmentation mappings.
-- Adjust specific hyper-parameters (such as Epochs or Batch-Size optimizations).
-- Click **Start Training** and let the PyTorch execution begin. You can observe the live WebSocket metrics charting your loss patterns immediately!
+## 2. Teach the AI (Launch Training)
+**Go to the `Training` page.**
+- Once your dataset is loaded, it's time to teach the AI what cracks look like.
+- Choose your dataset from the dropdown menu.
+- Select one of the available AI models (like YOLO Segmentation).
+- Adjust simple settings (like how many times the AI should review the pictures, known as "Epochs").
+- Click **Start Training**. The computer will start learning. You will see live charts showing you how the app gets smarter over time!
 
-## 3. Review Checkpoints
-**Navigate to the `Models` page.**
-- Once the target epochs complete, open the **Models** tab.
-- Here you'll witness a history gallery of your fully trained metrics synced naturally for comparison.
-- This tab securely points back to the internal `/checkpoints` hub and displays specific UUID metrics linking to your exported `.pt` weight strings.
-- *(Note: If you have an external trained folder structure, dropping it into the backend folders and clicking 'Sync Local Models' natively builds the list out as well.)*
+## 3. View Saved AI Models (Review Checkpoints)
+**Go to the `Models` page.**
+- After the training finishes, go to the Models page.
+- Here, you can find a list of all your fully trained AI models. Have a look at their scores to see how accurate they are.
+- Every saved model (checkpoint) is kept safely so you can reuse it later.
+- *(Note: If you or a friend trained an AI model on a different computer, just copy the result folder into the backend folder and click 'Sync Local Models' to add it to your list!)*
 
-## 4. Run Detection
-**Navigate to the `Detection` page to test.**
-- Now that your custom checkpoints are secured, test them!
-- Select the `Detection` testing panel.
-- Upload any target media file, such as a localized image (`.jpg`/`.png`) or a drone-inspection video (`.mp4`).
-- Optionally scale the confidence thresholds natively to restrict noise filtering.
-- Click **Run Detection**. The backend will spin up evaluation threads dynamically wrapping colored crack polygon overlays mapping where the damage originates over the surface of your uploaded image/video!
+## 4. Test the AI (Run Detection)
+**Go to the `Detection` page to test.**
+- Now that your AI learned how to detect cracks, let's see it in action!
+- Open the Detection page.
+- Upload an image or a video.
+- Click **Run Detection**. The AI will analyze your file and draw colored outlines directly over the cracks it finds!
