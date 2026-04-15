@@ -125,7 +125,7 @@ Detailed documentation including API reference, configurations, offline-sync mec
 
 ## 🤝 Support & License
 
-This project implements standard MIT licensing logic frameworks. Acknowledgment provided to Ultralytics.
+This project is proprietary and operates under a strict **End-User License Agreement (EULA)** that permits local usage, but strictly prohibits unapproved distributions or derivative modifications. Please review the [LICENSE](LICENSE) file for exact boundaries. Acknowledgment provided to Ultralytics.
 
 ---
 **Version**: 1.0.0
