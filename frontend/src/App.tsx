@@ -8,6 +8,7 @@ import Datasets from './pages/Datasets';
 import Models from './pages/Models';
 import Settings from './pages/Settings';
 import Evaluation from './pages/Evaluation';
+import Demo from './pages/Demo';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/datasets" element={<Datasets />} />
           <Route path="/models" element={<Models />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/demo" element={<Demo />} />
         </Routes>
       </Layout>
     </ThemeProvider>

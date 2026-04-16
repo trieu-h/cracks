@@ -8,7 +8,8 @@ import {
   Box, 
   Settings,
   Layers,
-  LineChart
+  LineChart,
+  Sparkles
 } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
@@ -18,6 +19,7 @@ interface LayoutProps {
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/demo', label: 'Demo', icon: Sparkles },
   { path: '/training', label: 'Training', icon: Play },
   { path: '/detection', label: 'Detection', icon: Image },
   { path: '/evaluation', label: 'Evaluation', icon: LineChart },

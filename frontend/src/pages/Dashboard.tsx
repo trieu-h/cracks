@@ -7,11 +7,13 @@ import {
   TrendingUp, 
   Clock, 
   Layers,
-  Info
+  Info,
+  BarChart3
 } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { getGPUStats, getTrainingSessions } from '../api';
-// Charts temporarily hidden - recharts imports removed
+import LineChart from '../components/charts/LineChart';
+import { Panel } from '../components/ui/Panel';
 
 const Dashboard: React.FC = () => {
   const [gpuStats, setGpuStats] = useState<any>(null);
@@ -78,7 +80,7 @@ const Dashboard: React.FC = () => {
                   ...session, 
                   current_epoch: data.epoch,
                   latest_metrics: data.metrics,
-                  all_metrics: [...(session.all_metrics || []), data.metrics]
+                  all_metrics: [...(session.all_metrics || []), { ...data.metrics, epoch: data.epoch }]
                 }
               : session
           )
@@ -310,6 +312,21 @@ const Dashboard: React.FC = () => {
             <div className="text-2xl font-serif" style={{ color: 'var(--text-primary)' }}>{formatPercent(stats.mAP50_95)}</div>
           </div>
         </div>
+
+        {/* Training Progress Chart */}
+        {(selectedSession?.all_metrics?.length > 0 || 
+          (selectedSession?.latest_metrics && Object.keys(selectedSession.latest_metrics).length > 0)) && (
+          <Panel title="Training Progress" icon={<BarChart3 size={18} />}>
+            <LineChart 
+              data={selectedSession?.all_metrics?.length > 0 
+                ? selectedSession.all_metrics 
+                : [{ epoch: 1, ...selectedSession.latest_metrics }]
+              }
+              width={900}
+              height={350}
+            />
+          </Panel>
+        )}
 
         {/* System Status - Fixed Contrast */}
         <div 
