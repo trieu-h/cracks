@@ -24,18 +24,6 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div className="flex items-center justify-between py-3 border-b border-gray-800">
-            <div>
-              <div className="text-gray-200">Theme</div>
-              <div className="text-sm text-gray-500">
-                Vintage Industrial (Dark)
-              </div>
-            </div>
-            <div className="text-xs text-vintage-orange bg-vintage-orange/20 px-2 py-1 rounded">
-              ACTIVE
-            </div>
-          </div>
         </div>
       </Panel>
 
@@ -46,13 +34,13 @@ const SettingsPage: React.FC = () => {
               <Settings size={32} className="text-vintage-orange" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-200">Crack Detection Lab</h3>
+              <h3 className="text-xl font-bold text-gray-200">Crack Lab</h3>
               <p className="text-sm text-gray-500">Version 1.0.0</p>
             </div>
           </div>
 
           <p className="text-gray-400 text-sm leading-relaxed">
-            A vintage industrial-style laboratory interface for training and deploying 
+            An interface for training and deploying 
             crack detection models using YOLO architectures. Features real-time 
             GPU monitoring and WebSocket updates.
           </p>
@@ -82,10 +70,6 @@ const SettingsPage: React.FC = () => {
               <div>
                 <span className="text-gray-500">ML Backend:</span>
                 <span className="text-gray-300 ml-2">Ultralytics YOLO</span>
-              </div>
-              <div>
-                <span className="text-gray-500">UI Style:</span>
-                <span className="text-gray-300 ml-2">Vintage Industrial (1970s)</span>
               </div>
               <div>
                 <span className="text-gray-500">Storage:</span>

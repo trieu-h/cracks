@@ -40,7 +40,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
             <div>
               <h1 className="font-serif text-xl text-stone-100">
-                Crack Lab
+                Crack Net
               </h1>
             </div>
           </div>
