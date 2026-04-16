@@ -10,6 +10,7 @@ import {
   Layers,
   LineChart
 } from 'lucide-react';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,17 +30,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen flex bg-stone-950">
+    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Sidebar */}
       <aside className="w-64 sidebar-clean flex flex-col">
         {/* Logo */}
-        <div className="p-6 border-b border-stone-800">
+        <div className="p-6 border-b" style={{ borderColor: 'var(--border-primary)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" 
+                 style={{ background: 'linear-gradient(135deg, var(--accent-secondary), var(--accent-primary))' }}>
               <Layers className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="font-serif text-xl text-stone-100">
+              <h1 className="font-serif text-xl" style={{ color: 'var(--text-primary)' }}>
                 Crack Net
               </h1>
             </div>
@@ -66,8 +68,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-stone-800">
-          <div className="text-xs text-stone-600">
+        <div className="p-4 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+          <div className="text-xs" style={{ color: 'var(--text-disabled)' }}>
             Version 1.0.0
           </div>
         </div>
@@ -78,14 +80,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Header */}
         <header className="header-clean px-8 py-4 flex items-center justify-between">
           <div>
-            <h2 className="font-serif text-2xl text-stone-100">
+            <h2 className="font-serif text-2xl" style={{ color: 'var(--text-primary)' }}>
               {navItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
             </h2>
           </div>
+          
+          {/* Theme Toggle */}
+          <ThemeToggle />
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-8">
+        <div className="flex-1 overflow-auto p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
           {children}
         </div>
       </main>

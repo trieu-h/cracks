@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Box, Download, Calendar, HardDrive, Trash2 } from 'lucide-react';
 import { Panel } from '../components/ui/Panel';
 import { Button } from '../components/ui/Button';
-import { LED } from '../components/ui/LED';
 import { getModels, deleteModel } from '../api';
 
 const Models: React.FC = () => {
@@ -60,36 +59,37 @@ const Models: React.FC = () => {
   return (
     <div className="space-y-6">
       <Panel title="Trained Models">
-        <div className="max-h-[480px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
+        <div className="max-h-[480px] overflow-y-auto pr-2 space-y-0 scrollbar-thin">
           {models.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Box size={48} className="mx-auto mb-4 opacity-30" />
+            <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
+              <Box size={48} className="mx-auto mb-4" style={{ opacity: 0.3 }} />
               <p>No trained models yet</p>
-              <p className="text-sm mt-2">Train a model to see it here</p>
+              <p className="text-sm mt-2" style={{ color: 'var(--text-disabled)' }}>Train a model to see it here</p>
             </div>
           ) : (
-            models.map(model => (
+            models.map((model, index) => (
               <div 
                 key={model.id}
-                className={`flex items-center justify-between py-4 px-4 bg-gray-900/50 rounded-lg transition-all duration-300 ease-out ${
+                className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 ease-out ${
                   deletingIds.has(model.id) 
                     ? 'opacity-0 scale-95 -translate-x-4' 
                     : 'opacity-100 scale-100 translate-x-0'
                 }`}
+                style={{ 
+                  background: 'var(--bg-secondary)',
+                  borderBottom: index < models.length - 1 ? '1px solid var(--border-primary)' : 'none'
+                }}
               >
                 <div className="flex items-start gap-4">
-                  <div className="mt-1">
-                    <LED color="green" />
-                  </div>
                   <div>
-                    <div className="font-medium text-gray-200 flex items-center gap-2">
-                      <Box size={16} className="text-vintage-orange" />
+                    <div className="font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                      <Box size={16} style={{ color: 'var(--warning-text)' }} />
                       {model.name}
                     </div>
-                    <div className="text-sm text-gray-500 font-mono mt-1">
+                    <div className="text-sm font-mono mt-1" style={{ color: 'var(--text-muted)' }}>
                       ID: {model.id}
                     </div>
-                    <div className="flex gap-4 mt-2 text-xs text-gray-400">
+                    <div className="flex gap-4 mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
                         {formatDate(model.created)}
@@ -129,31 +129,40 @@ const Models: React.FC = () => {
       <div className="grid grid-cols-3 gap-6">
         <Panel title="Total Models">
           <div className="text-center py-4">
-            <div className="text-4xl font-mono text-scope-green">
+            <div 
+              className="text-4xl font-mono"
+              style={{ color: 'var(--success-text)' }}
+            >
               {models.length}
             </div>
-            <div className="text-sm text-gray-500 mt-2">Trained models</div>
+            <div className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>Trained models</div>
           </div>
         </Panel>
 
         <Panel title="Storage Used">
           <div className="text-center py-4">
-            <div className="text-4xl font-mono text-vintage-orange">
+            <div 
+              className="text-4xl font-mono"
+              style={{ color: 'var(--warning-text)' }}
+            >
               {formatSize(models.reduce((acc, m) => acc + m.size, 0))}
             </div>
-            <div className="text-sm text-gray-500 mt-2">Total size</div>
+            <div className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>Total size</div>
           </div>
         </Panel>
 
         <Panel title="Latest Model">
           <div className="text-center py-4">
-            <div className="text-lg font-mono text-scope-blue">
+            <div 
+              className="text-lg font-mono"
+              style={{ color: 'var(--accent-primary)' }}
+            >
               {models.length > 0 
                 ? formatDate(models[0].created)
                 : '--'
               }
             </div>
-            <div className="text-sm text-gray-500 mt-2">Created on</div>
+            <div className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>Created on</div>
           </div>
         </Panel>
       </div>

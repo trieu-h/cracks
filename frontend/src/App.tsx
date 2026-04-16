@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Training from './pages/Training';
@@ -10,17 +11,19 @@ import Evaluation from './pages/Evaluation';
 
 function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/training" element={<Training />} />
-        <Route path="/detection" element={<Detection />} />
-        <Route path="/evaluation" element={<Evaluation />} />
-        <Route path="/datasets" element={<Datasets />} />
-        <Route path="/models" element={<Models />} />
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
-    </Layout>
+    <ThemeProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/training" element={<Training />} />
+          <Route path="/detection" element={<Detection />} />
+          <Route path="/evaluation" element={<Evaluation />} />
+          <Route path="/datasets" element={<Datasets />} />
+          <Route path="/models" element={<Models />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </Layout>
+    </ThemeProvider>
   );
 }
 

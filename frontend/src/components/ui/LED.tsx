@@ -19,16 +19,17 @@ export const LED: React.FC<LEDProps> = ({
     lg: 'w-2.5 h-2.5'
   };
 
+  // Use actual color values for LED since they need to glow
   const colorClasses = {
-    green: 'bg-primary-500',
+    green: 'bg-emerald-500',
     orange: 'bg-amber-500',
     red: 'bg-red-500',
-    off: 'bg-paper-300',
-    gray: 'bg-ink-400'
+    off: 'bg-stone-400 dark:bg-stone-600',
+    gray: 'bg-stone-500'
   };
 
   const glowClasses = {
-    green: 'shadow-[0_0_8px_rgba(34,197,94,0.6)]',
+    green: 'shadow-[0_0_8px_rgba(16,185,129,0.6)] dark:shadow-[0_0_8px_rgba(34,197,94,0.6)]',
     orange: 'shadow-[0_0_8px_rgba(245,158,11,0.6)]',
     red: 'shadow-[0_0_8px_rgba(239,68,68,0.6)]',
     off: '',
@@ -42,7 +43,7 @@ export const LED: React.FC<LEDProps> = ({
           pulse ? `animate-pulse ${glowClasses[color]}` : ''
         }`} 
       />
-      {label && <span className="text-xs text-ink-500 font-mono">{label}</span>}
+      {label && <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{label}</span>}
     </div>
   );
 };

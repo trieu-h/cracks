@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Panel } from '../components/ui/Panel';
-import { getTrainingSessions, BASE_URL } from '../api';
-import { Clock, Database, Settings, Activity, ChevronRight, Search, Filter } from 'lucide-react';
+import { getTrainingSessions } from '../api';
+import { Activity, ChevronRight } from 'lucide-react';
 
 const Evaluation: React.FC = () => {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -29,48 +28,99 @@ const Evaluation: React.FC = () => {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 relative">
-            <div className="absolute inset-0 bg-green-500 rounded-lg rotate-[-6deg] opacity-80" />
-            <div className="absolute inset-0 bg-pink-500 rounded-lg rotate-[-3deg] opacity-90" />
-            <div className="absolute inset-0 bg-blue-500 rounded-lg shadow-lg flex items-center justify-center">
-               <Activity size={20} className="text-white" />
+            <div 
+              className="absolute inset-0 rounded-lg rotate-[-6deg] opacity-80"
+              style={{ background: 'var(--accent-secondary)' }}
+            />
+            <div 
+              className="absolute inset-0 rounded-lg rotate-[-3deg] opacity-90"
+              style={{ background: 'var(--accent-primary)' }}
+            />
+            <div 
+              className="absolute inset-0 rounded-lg shadow-lg flex items-center justify-center"
+              style={{ background: 'var(--accent-primary)' }}
+            >
+              <Activity size={20} className="text-white" />
             </div>
           </div>
-          <h1 className="font-serif text-3xl text-stone-100">Training History</h1>
+          <h1 className="font-serif text-3xl" style={{ color: 'var(--text-primary)' }}>Training History</h1>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-stone-800">
+      <div 
+        className="flex"
+        style={{ borderBottom: '1px solid var(--border-primary)' }}
+      >
         <button 
           onClick={() => setActiveTab('past')}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-            activeTab === 'past' ? 'text-red-500' : 'text-stone-500 hover:text-stone-300'
-          }`}
+          className="px-6 py-3 text-sm font-medium transition-colors relative"
+          style={
+            activeTab === 'past'
+              ? { color: 'var(--accent-primary)' }
+              : { color: 'var(--text-muted)' }
+          }
+          onMouseEnter={(e) => {
+            if (activeTab !== 'past') {
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (activeTab !== 'past') {
+              e.currentTarget.style.color = 'var(--text-muted)';
+            }
+          }}
         >
           Past Runs
           {activeTab === 'past' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ background: 'var(--accent-primary)' }}
+            />
           )}
         </button>
         <button 
           onClick={() => setActiveTab('compare')}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-            activeTab === 'compare' ? 'text-red-500' : 'text-stone-500 hover:text-stone-300'
-          }`}
+          className="px-6 py-3 text-sm font-medium transition-colors relative"
+          style={
+            activeTab === 'compare'
+              ? { color: 'var(--accent-primary)' }
+              : { color: 'var(--text-muted)' }
+          }
+          onMouseEnter={(e) => {
+            if (activeTab !== 'compare') {
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (activeTab !== 'compare') {
+              e.currentTarget.style.color = 'var(--text-muted)';
+            }
+          }}
         >
           Compare Models
           {activeTab === 'compare' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ background: 'var(--accent-primary)' }}
+            />
           )}
         </button>
       </div>
 
       {activeTab === 'past' ? (
-        <div className="card-clean overflow-hidden p-0 border-stone-800/50">
+        <div className="card-clean overflow-hidden p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-stone-900/30 text-stone-500 text-[11px] uppercase tracking-wider border-b border-stone-800">
+                <tr 
+                  className="text-[11px] uppercase tracking-wider"
+                  style={{ 
+                    background: 'var(--bg-secondary)', 
+                    color: 'var(--text-muted)',
+                    borderBottom: '1px solid var(--border-primary)'
+                  }}
+                >
                   <th className="py-4 px-4 font-medium">run_id</th>
                   <th className="py-4 px-4 font-medium">timestamp</th>
                   <th className="py-4 px-4 font-medium">data_yml</th>
@@ -90,47 +140,67 @@ const Evaluation: React.FC = () => {
                   <th className="py-4 px-4 font-medium">mAP50-95</th>
                 </tr>
               </thead>
-              <tbody className="text-sm divide-y divide-stone-800/50">
+              <tbody 
+                className="text-sm"
+                style={{ 
+                  color: 'var(--text-secondary)',
+                  borderTop: '1px solid var(--border-primary)'
+                }}
+              >
                 {sessions.length === 0 ? (
                   <tr>
-                      <td colSpan={17} className="py-20 text-center text-stone-600">
+                    <td 
+                      colSpan={17} 
+                      className="py-20 text-center"
+                      style={{ color: 'var(--text-disabled)' }}
+                    >
                       {loading ? 'Fetching history...' : 'No training sessions found'}
                     </td>
                   </tr>
                 ) : (
                   sessions.map((session) => (
-                    <tr key={session.id} className="hover:bg-stone-800/20 transition-colors">
-                      <td className="py-4 px-4 font-mono text-stone-300">{session.id}</td>
-                      <td className="py-4 px-4 text-stone-400 whitespace-nowrap">
+                    <tr 
+                      key={session.id} 
+                      className="transition-colors"
+                      style={{ borderBottom: '1px solid var(--border-primary)' }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLTableRowElement).style.background = 'var(--bg-hover)';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLTableRowElement).style.background = 'transparent';
+                      }}
+                    >
+                      <td className="py-4 px-4 font-mono" style={{ color: 'var(--text-secondary)' }}>{session.id}</td>
+                      <td className="py-4 px-4 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
                         {session.start_time ? new Date(session.start_time * 1000).toLocaleString() : '--'}
                       </td>
-                      <td className="py-4 px-4 text-stone-400">
+                      <td className="py-4 px-4" style={{ color: 'var(--text-muted)' }}>
                         {session.config?.dataset_yaml?.split(/[\\/]/).pop() || 'data.yaml'}
                       </td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.total_epochs || session.config?.epochs || '--'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.config?.lr0 || '--'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.config?.batch || '--'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.config?.optimizer || 'Adam'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.config?.imgsz || '--'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.config?.patience || '100'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.config?.weight_decay || '0.0005'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center">{session.config?.momentum || '0.937'}</td>
-                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.total_epochs || session.config?.epochs || '--'}</td>
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.config?.lr0 || '--'}</td>
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.config?.batch || '--'}</td>
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.config?.optimizer || 'Adam'}</td>
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.config?.imgsz || '--'}</td>
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.config?.patience || '100'}</td>
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.config?.weight_decay || '0.0005'}</td>
+                      <td className="py-4 px-4 text-center" style={{ color: 'var(--text-secondary)' }}>{session.config?.momentum || '0.937'}</td>
+                      <td className="py-4 px-4 text-center font-mono" style={{ color: 'var(--text-secondary)' }}>
                         {session.latest_metrics?.box_loss?.toFixed(4) || '--'}
                       </td>
-                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                      <td className="py-4 px-4 text-center font-mono" style={{ color: 'var(--text-secondary)' }}>
                         {session.latest_metrics?.f1 !== undefined ? `${(session.latest_metrics.f1 * 100).toFixed(1)}%` : '--'}
                       </td>
-                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                      <td className="py-4 px-4 text-center font-mono" style={{ color: 'var(--text-secondary)' }}>
                         {session.latest_metrics?.precision !== undefined ? `${(session.latest_metrics.precision * 100).toFixed(1)}%` : '--'}
                       </td>
-                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                      <td className="py-4 px-4 text-center font-mono" style={{ color: 'var(--text-secondary)' }}>
                         {session.latest_metrics?.recall !== undefined ? `${(session.latest_metrics.recall * 100).toFixed(1)}%` : '--'}
                       </td>
-                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                      <td className="py-4 px-4 text-center font-mono" style={{ color: 'var(--text-secondary)' }}>
                         {session.latest_metrics?.mAP50 !== undefined ? `${(session.latest_metrics.mAP50 * 100).toFixed(1)}%` : '--'}
                       </td>
-                      <td className="py-4 px-4 text-stone-300 text-center font-mono">
+                      <td className="py-4 px-4 text-center font-mono" style={{ color: 'var(--text-secondary)' }}>
                         {session.latest_metrics?.mAP50_95 !== undefined ? `${(session.latest_metrics.mAP50_95 * 100).toFixed(1)}%` : '--'}
                       </td>
                     </tr>
@@ -141,10 +211,13 @@ const Evaluation: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 bg-stone-900/20 rounded-xl border border-dashed border-stone-800">
-          <ChevronRight size={48} className="text-stone-800 mb-4" />
-          <h3 className="text-stone-400 font-medium">Model Comparison</h3>
-          <p className="text-stone-600 text-sm mt-1">Select multiple runs from 'Past Runs' to compare side-by-side.</p>
+        <div 
+          className="flex flex-col items-center justify-center py-20 rounded-xl border border-dashed"
+          style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}
+        >
+          <ChevronRight size={48} className="mb-4" style={{ color: 'var(--border-secondary)' }} />
+          <h3 className="font-medium" style={{ color: 'var(--text-muted)' }}>Model Comparison</h3>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-disabled)' }}>Select multiple runs from 'Past Runs' to compare side-by-side.</p>
         </div>
       )}
     </div>

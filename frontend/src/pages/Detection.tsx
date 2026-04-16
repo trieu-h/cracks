@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Play, RotateCcw, Image, Video, Camera, Download, AlertTriangle } from 'lucide-react';
+import { Upload, Play, RotateCcw, Image, Video, Camera, Download } from 'lucide-react';
 import { Panel } from '../components/ui/Panel';
 import { Button } from '../components/ui/Button';
 import { LED } from '../components/ui/LED';
@@ -138,8 +138,8 @@ const Detection: React.FC = () => {
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
   const [autoCapture, setAutoCapture] = useState(true);
-  const [captureInterval, setCaptureInterval] = useState<number>(200);
-  const [webcamResult, setWebcamResult] = useState<any>(null);
+  const [captureInterval] = useState<number>(200);
+  const [, setWebcamResult] = useState<any>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [detections, setDetections] = useState<any[]>([]);
   const [fps, setFps] = useState<number>(0);
@@ -154,7 +154,6 @@ const Detection: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const webcamVideoRef = useRef<HTMLVideoElement>(null);
-  const webcamCanvasRef = useRef<HTMLCanvasElement>(null);
   const autoCaptureRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -365,17 +364,33 @@ const Detection: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 space-y-6 overflow-auto pr-2 pb-10 custom-scrollbar">
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-b border-stone-700 pb-4">
+        <div 
+          className="flex gap-2 pb-4"
+          style={{ borderBottom: '1px solid var(--border-primary)' }}
+        >
           <button
             onClick={() => {
               setActiveTab('photo');
               stopWebcam();
             }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'photo' 
-                ? 'bg-stone-700 text-white' 
-                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800'
-            }`}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+            style={
+              activeTab === 'photo'
+                ? { background: 'var(--accent-primary)', color: 'white' }
+                : { color: 'var(--text-muted)', background: 'transparent' }
+            }
+            onMouseEnter={(e) => {
+              if (activeTab !== 'photo') {
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== 'photo') {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }
+            }}
           >
             <Image size={18} />
             Photo
@@ -385,22 +400,48 @@ const Detection: React.FC = () => {
               setActiveTab('video');
               stopWebcam();
             }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'video' 
-                ? 'bg-stone-700 text-white' 
-                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800'
-            }`}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+            style={
+              activeTab === 'video'
+                ? { background: 'var(--accent-primary)', color: 'white' }
+                : { color: 'var(--text-muted)', background: 'transparent' }
+            }
+            onMouseEnter={(e) => {
+              if (activeTab !== 'video') {
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== 'video') {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }
+            }}
           >
             <Video size={18} />
             Video
           </button>
           <button
             onClick={() => setActiveTab('webcam')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'webcam' 
-                ? 'bg-stone-700 text-white' 
-                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800'
-            }`}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+            style={
+              activeTab === 'webcam'
+                ? { background: 'var(--accent-primary)', color: 'white' }
+                : { color: 'var(--text-muted)', background: 'transparent' }
+            }
+            onMouseEnter={(e) => {
+              if (activeTab !== 'webcam') {
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== 'webcam') {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }
+            }}
           >
             <Camera size={18} />
             Webcam
@@ -413,7 +454,7 @@ const Detection: React.FC = () => {
             <div className="flex gap-4 items-start">
               {/* Model Selection */}
               <div className="w-[250px] shrink-0">
-                <label className="text-sm text-stone-400 mb-2 block h-[22px]">Select Model</label>
+                <label className="text-sm mb-2 block h-[22px]" style={{ color: 'var(--text-muted)' }}>Select Model</label>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
@@ -427,7 +468,7 @@ const Detection: React.FC = () => {
                   ))}
                 </select>
                 {models.length === 0 && (
-                  <p className="text-xs text-stone-500 mt-2">
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
                     No trained models available. Train a model first.
                   </p>
                 )}
@@ -435,7 +476,7 @@ const Detection: React.FC = () => {
 
               {/* File Upload */}
               <div className="flex-1 min-w-[300px]">
-                <label className="text-sm text-stone-400 mb-2 block h-[22px]">
+                <label className="text-sm mb-2 block h-[22px]" style={{ color: 'var(--text-muted)' }}>
                   Select {activeTab === 'photo' ? 'Image' : 'Video'}
                 </label>
                 <div className="flex gap-2">
@@ -448,7 +489,7 @@ const Detection: React.FC = () => {
                   />
                   <button
                     onClick={openFilePicker}
-                    className="px-4 py-2 bg-stone-700 hover:bg-stone-600 rounded-xl text-sm text-stone-200 transition-all"
+                    className="btn-clean px-4 py-2"
                     title="Browse files"
                   >
                     Browse
@@ -458,7 +499,7 @@ const Detection: React.FC = () => {
 
               {/* Run Detection Button */}
               <div className="shrink-0">
-                <label className="text-sm text-stone-400 mb-2 block h-[22px] opacity-0">Action</label>
+                <label className="text-sm mb-2 block h-[22px] opacity-0" style={{ color: 'var(--text-muted)' }}>Action</label>
                 <Button 
                   primary 
                   onClick={handlePredict} 
@@ -483,7 +524,7 @@ const Detection: React.FC = () => {
             <div className="flex gap-4 mt-4 flex-wrap">
               {activeTab === 'video' && (
                 <div style={{ minWidth: '300px', flex: '1 1 300px' }}>
-                  <label className="text-xs text-stone-400">Frame Sample Interval (lower = more accurate but slower)</label>
+                  <label className="text-xs" style={{ color: 'var(--text-muted)' }}>Frame Sample Interval (lower = more accurate but slower)</label>
                   <input
                     type="range"
                     min="1"
@@ -492,7 +533,7 @@ const Detection: React.FC = () => {
                     onChange={(e) => setSampleInterval(parseInt(e.target.value))}
                     className="w-full mt-1"
                   />
-                  <div className="flex justify-between text-xs text-stone-500 mt-1">
+                  <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                     <span>1 (all frames)</span>
                     <span>{sampleInterval} frame(s)</span>
                     <span>30 (fast)</span>
@@ -527,7 +568,7 @@ const Detection: React.FC = () => {
             <div className="flex gap-4 items-start">
               {/* Model Selection */}
               <div className="w-[300px] shrink-0">
-                <label className="text-sm text-stone-400 mb-2 block h-[22px]">Select Model</label>
+                <label className="text-sm mb-2 block h-[22px]" style={{ color: 'var(--text-muted)' }}>Select Model</label>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
@@ -541,7 +582,7 @@ const Detection: React.FC = () => {
                   ))}
                 </select>
                 {models.length === 0 && (
-                  <p className="text-xs text-stone-500 mt-2">
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
                     No trained models available.
                   </p>
                 )}
@@ -549,7 +590,7 @@ const Detection: React.FC = () => {
 
               {/* Webcam Control */}
               <div className="shrink-0">
-                <label className="text-sm text-stone-400 mb-2 block h-[22px]">Webcam</label>
+                <label className="text-sm mb-2 block h-[22px]" style={{ color: 'var(--text-muted)' }}>Webcam</label>
                 <div className="flex">
                   {!webcamActive ? (
                     <Button
@@ -579,7 +620,10 @@ const Detection: React.FC = () => {
           <div className="grid grid-cols-2 gap-6" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
             {/* Left: Original Image */}
             <Panel title="Original Image" className="h-full flex flex-col">
-              <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0">
+              <div 
+                className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border min-h-0"
+                style={{ borderColor: 'var(--border-primary)', background: 'var(--bg-secondary)' }}
+              >
                 <img 
                   src={imagePreview}
                   alt="Original"
@@ -595,12 +639,17 @@ const Detection: React.FC = () => {
                   <div className="flex items-center justify-between mb-4 shrink-0">
                     <div className="flex items-center gap-2">
                       <LED color={result.success && result.result?.success ? 'green' : 'red'} />
-                      <span className={`font-mono ${result.success && result.result?.success ? 'text-green-400' : 'text-red-400'}`}>
+                      <span 
+                        className="font-mono"
+                        style={{ 
+                          color: result.success && result.result?.success ? 'var(--success-text)' : 'var(--error-text)' 
+                        }}
+                      >
                         {result.success && result.result?.success ? 'SEGMENTED' : 'ERROR'}
                       </span>
                     </div>
                     {result.result?.inference_time && (
-                      <span className="text-xs text-stone-500">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                         {(result.result.inference_time * 1000).toFixed(0)}ms
                       </span>
                     )}
@@ -610,7 +659,10 @@ const Detection: React.FC = () => {
                     <>
                       {result.result.annotated_image ? (
                         <div className="flex-1 flex flex-col min-h-0 relative group">
-                          <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 relative">
+                          <div 
+                            className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border relative"
+                            style={{ borderColor: 'var(--border-primary)', background: 'var(--bg-secondary)' }}
+                          >
                             <img 
                               src={`${BASE_URL}/predictions/${result.result.annotated_image.replace(/\\/g, '/').split('/').pop()}`}
                               alt="Detection Result"
@@ -623,7 +675,12 @@ const Detection: React.FC = () => {
                             <a 
                               href={`${BASE_URL}/predictions/${result.result.annotated_image.replace(/\\/g, '/').split('/').pop()}`}
                               download={`predicted_${result.result.annotated_image.replace(/\\/g, '/').split('/').pop()}`}
-                              className="absolute bottom-4 right-4 bg-stone-800/80 hover:bg-stone-700 text-stone-200 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 backdrop-blur-sm shadow-lg border border-stone-600"
+                              className="absolute bottom-4 right-4 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 shadow-lg border"
+                              style={{ 
+                                background: 'var(--bg-card)', 
+                                borderColor: 'var(--border-primary)',
+                                color: 'var(--text-secondary)'
+                              }}
                               title="Download Image"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -634,28 +691,45 @@ const Detection: React.FC = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex-1 flex items-center justify-center text-stone-500 min-h-0">
+                        <div 
+                          className="flex-1 flex items-center justify-center min-h-0"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
                           No annotated image available
                         </div>
                       )}
 
                       <div className="mt-4 shrink-0">
-                        <div className="flex items-center justify-between text-sm text-stone-400 mb-2">
+                        <div 
+                          className="flex items-center justify-between text-sm mb-2"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
                           <span>{result.result.num_detections} {result.result.num_detections === 1 ? 'crack' : 'cracks'} detected</span>
-                          <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">Analysis</span>
+                          <span 
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ color: 'var(--accent-primary)', background: 'var(--accent-glow)' }}
+                          >
+                            Analysis
+                          </span>
                         </div>
                         
                         {result.result.num_detections > 0 && result.result.detections && (
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-stone-800/50 p-2 rounded flex flex-col">
-                              <span className="text-stone-500">Average Confidence:</span>
-                              <span className="text-stone-300">
+                            <div 
+                              className="p-2 rounded flex flex-col"
+                              style={{ background: 'var(--bg-tertiary)' }}
+                            >
+                              <span style={{ color: 'var(--text-muted)' }}>Average Confidence:</span>
+                              <span style={{ color: 'var(--text-secondary)' }}>
                                 {(result.result.detections.reduce((acc: number, d: any) => acc + d.confidence, 0) / result.result.num_detections * 100).toFixed(1)}%
                               </span>
                             </div>
-                            <div className="bg-stone-800/50 p-2 rounded flex flex-col">
-                              <span className="text-stone-500">Total Crack Area:</span>
-                              <span className="text-stone-300">
+                            <div 
+                              className="p-2 rounded flex flex-col"
+                              style={{ background: 'var(--bg-tertiary)' }}
+                            >
+                              <span style={{ color: 'var(--text-muted)' }}>Total Crack Area:</span>
+                              <span style={{ color: 'var(--text-secondary)' }}>
                                 {result.result.detections.reduce((acc: number, d: any) => acc + (d.area || 0), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} px²
                               </span>
                             </div>
@@ -665,14 +739,20 @@ const Detection: React.FC = () => {
                       </div>
                     </>
                   ) : (
-                    <div className="flex-1 flex items-center justify-center text-red-400 min-h-0">
+                    <div 
+                      className="flex-1 flex items-center justify-center min-h-0"
+                      style={{ color: 'var(--error-text)' }}
+                    >
                       {result.result?.error || result.error || 'An unknown error occurred'}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-stone-500 min-h-0">
-                  <Upload size={48} className="mb-4 opacity-30" />
+                <div 
+                  className="h-full flex flex-col items-center justify-center min-h-0"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <Upload size={48} className="mb-4" style={{ opacity: 0.3 }} />
                   <p>Click "Run Detection" to see results</p>
                   <p className="text-sm mt-2">The annotated image will appear here</p>
                 </div>
@@ -686,7 +766,10 @@ const Detection: React.FC = () => {
           <div className="grid grid-cols-2 gap-6" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
             {/* Left: Original Video */}
             <Panel title="Original Video" className="h-full flex flex-col">
-              <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0">
+              <div 
+                className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border min-h-0"
+                style={{ borderColor: 'var(--border-primary)', background: 'var(--bg-secondary)' }}
+              >
                 <video 
                   src={videoPreview}
                   controls
@@ -702,7 +785,12 @@ const Detection: React.FC = () => {
                   <div className="flex items-center justify-between mb-4 shrink-0">
                     <div className="flex items-center gap-2">
                       <LED color={result.success && result.result?.success ? 'green' : 'red'} />
-                      <span className={`font-mono ${result.success && result.result?.success ? 'text-green-400' : 'text-red-400'}`}>
+                      <span 
+                        className="font-mono"
+                        style={{ 
+                          color: result.success && result.result?.success ? 'var(--success-text)' : 'var(--error-text)' 
+                        }}
+                      >
                         {result.success && result.result?.success ? 'PROCESSED' : 'ERROR'}
                       </span>
                     </div>
@@ -711,7 +799,10 @@ const Detection: React.FC = () => {
                   {result.success && result.result?.success ? (
                     <>
                       {result.result.annotated_video ? (
-                        <div className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border border-stone-700 bg-stone-900/50 min-h-0 relative group">
+                        <div 
+                          className="flex-1 flex items-center justify-center rounded-lg overflow-hidden border min-h-0 relative group"
+                          style={{ borderColor: 'var(--border-primary)', background: 'var(--bg-secondary)' }}
+                        >
                           <video 
                             src={`${BASE_URL}/predictions/${result.result.annotated_video.replace(/\\/g, '/').split('/').pop()}`}
                             controls
@@ -720,7 +811,12 @@ const Detection: React.FC = () => {
                           <a 
                             href={`${BASE_URL}/predictions/${result.result.annotated_video.replace(/\\/g, '/').split('/').pop()}`}
                             download={`predicted_${result.result.annotated_video.replace(/\\/g, '/').split('/').pop()}`}
-                            className="absolute bottom-4 right-4 bg-stone-800/80 hover:bg-stone-700 text-stone-200 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 backdrop-blur-sm shadow-lg border border-stone-600 z-10"
+                            className="absolute bottom-4 right-4 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 shadow-lg border z-10"
+                            style={{
+                              background: 'var(--bg-card)',
+                              borderColor: 'var(--border-primary)',
+                              color: 'var(--text-secondary)'
+                            }}
                             title="Download Video"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -730,27 +826,44 @@ const Detection: React.FC = () => {
                           </a>
                         </div>
                       ) : (
-                        <div className="flex-1 flex items-center justify-center text-stone-500 min-h-0">
+                        <div 
+                          className="flex-1 flex items-center justify-center min-h-0"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
                           No annotated video available
                         </div>
                       )}
 
-                      <div className="mt-4 space-y-2 text-sm text-stone-400 shrink-0">
+                      <div 
+                        className="mt-4 space-y-2 text-sm shrink-0"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         <div className="flex items-center justify-between">
                           <span>Total detections: {result.result.total_detections}</span>
-                          <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">Video Segmentation</span>
+                          <span 
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ color: 'var(--accent-primary)', background: 'var(--accent-glow)' }}
+                          >
+                            Video Segmentation
+                          </span>
                         </div>
                       </div>
                     </>
                   ) : (
-                    <div className="flex-1 flex items-center justify-center text-red-400 min-h-0">
+                    <div 
+                      className="flex-1 flex items-center justify-center min-h-0"
+                      style={{ color: 'var(--error-text)' }}
+                    >
                       {result.result?.error || result.error || 'Video processing failed'}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-stone-500 min-h-0">
-                  <Video size={48} className="mb-4 opacity-30" />
+                <div 
+                  className="h-full flex flex-col items-center justify-center min-h-0"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <Video size={48} className="mb-4" style={{ opacity: 0.3 }} />
                   <p>Click "Run Detection" to process video</p>
                   <p className="text-sm mt-2">The annotated video will appear here after processing</p>
                 </div>
@@ -763,7 +876,10 @@ const Detection: React.FC = () => {
         {activeTab === 'webcam' && webcamActive && (
           <div className="h-full" style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}>
             <Panel title="Live Webcam Detection" className="h-full flex flex-col relative overflow-hidden">
-              <div className="flex-1 relative min-h-0 bg-stone-900/50 rounded-lg overflow-hidden border border-stone-700">
+              <div 
+                className="flex-1 relative min-h-0 rounded-lg overflow-hidden border"
+                style={{ borderColor: 'var(--border-primary)', background: 'var(--bg-secondary)' }}
+              >
                 <video 
                   ref={webcamVideoRef}
                   autoPlay 
@@ -778,12 +894,18 @@ const Detection: React.FC = () => {
                 
                 {/* Stats Overlay */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
-                  <div className="flex items-center gap-2 bg-stone-900/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-stone-700">
+                  <div 
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border backdrop-blur-sm"
+                    style={{ background: 'var(--bg-card)', borderColor: 'var(--border-primary)' }}
+                  >
                     <LED color="green" pulse />
-                    <span className="text-[10px] font-mono text-stone-300">LIVE</span>
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--text-secondary)' }}>LIVE</span>
                   </div>
                   {fps > 0 && (
-                    <div className="bg-stone-900/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-stone-700 text-[10px] font-mono text-green-400">
+                    <div 
+                      className="px-3 py-1 rounded-lg border text-[10px] font-mono backdrop-blur-sm"
+                      style={{ background: 'var(--bg-card)', borderColor: 'var(--border-primary)', color: 'var(--success-text)' }}
+                    >
                       {fps} FPS
                     </div>
                   )}
@@ -792,7 +914,10 @@ const Detection: React.FC = () => {
                 {/* Detection Count Overlay */}
                 {detections.length > 0 && (
                   <div className="absolute top-4 right-4 z-20">
-                    <div className="bg-stone-900/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-stone-700 text-[10px] font-mono text-green-400">
+                    <div 
+                      className="px-3 py-1.5 rounded-lg border text-[10px] font-mono backdrop-blur-sm"
+                      style={{ background: 'var(--bg-card)', borderColor: 'var(--border-primary)', color: 'var(--success-text)' }}
+                    >
                       {detections.length} {detections.length === 1 ? 'crack' : 'cracks'} detected
                     </div>
                   </div>
@@ -802,16 +927,36 @@ const Detection: React.FC = () => {
               {/* Controls */}
               <div className="mt-4 flex items-center gap-4 shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-stone-400 uppercase font-bold tracking-wider">Real-time Detection</span>
-                  <div className={`w-2 h-2 rounded-full ${autoCapture ? 'bg-green-500 animate-pulse' : 'bg-stone-600'}`} />
+                  <span 
+                    className="text-xs uppercase font-bold tracking-wider"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    Real-time Detection
+                  </span>
+                  <div 
+                    className="w-2 h-2 rounded-full"
+                    style={{ 
+                      background: autoCapture ? 'var(--success-text)' : 'var(--text-disabled)',
+                      animation: autoCapture ? 'pulse 2s infinite' : undefined
+                    }}
+                  />
                 </div>
                 <button
                   onClick={() => setAutoCapture(!autoCapture)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                  className="px-3 py-1 rounded-lg text-xs font-medium transition-all border"
+                  style={
                     autoCapture 
-                      ? 'bg-green-600/20 text-green-400 border border-green-600/50' 
-                      : 'bg-stone-700 text-stone-400 border border-stone-600'
-                  }`}
+                      ? { 
+                          background: 'var(--success-bg)', 
+                          color: 'var(--success-text)', 
+                          borderColor: 'var(--success-text)'
+                        }
+                      : { 
+                          background: 'var(--bg-tertiary)', 
+                          color: 'var(--text-muted)', 
+                          borderColor: 'var(--border-secondary)'
+                        }
+                  }
                 >
                   {autoCapture ? 'ON' : 'OFF'}
                 </button>

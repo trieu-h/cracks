@@ -7,7 +7,6 @@ import {
   TrendingUp, 
   Clock, 
   Layers,
-  Database,
   Info
 } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -93,7 +92,6 @@ const Dashboard: React.FC = () => {
   const runningCount = sessions.filter(s => s.status === 'running').length;
   const completedCount = sessions.filter(s => s.status === 'completed').length;
   const stats = selectedSession?.latest_metrics || {};
-  // const metrics = selectedSession?.all_metrics || []; // Temporarily unused - charts hidden
 
   const formatPercent = (val: number | undefined) => {
     if (val === undefined) return '--%';
@@ -105,17 +103,49 @@ const Dashboard: React.FC = () => {
       {/* Welcome & Global Stats */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-stone-500 mb-1">Welcome back</p>
+          <p style={{ color: 'var(--text-muted)' }} className="mb-1">Welcome back</p>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-stone-900 border border-stone-800 rounded-xl flex items-center justify-center p-2 shadow-lg relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 group-hover:opacity-100 transition-opacity" />
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center p-2 relative overflow-hidden group"
+              style={{ 
+                background: 'var(--bg-secondary)', 
+                border: '1px solid var(--border-primary)'
+              }}
+            >
+              <div 
+                className="absolute inset-0 opacity-50"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(225,29,72,0.1), rgba(244,63,94,0.1))'
+                }}
+              />
               <div className="flex items-end gap-[1px] h-full w-full relative z-10">
-                <div className="flex-1 bg-green-500/60 rounded-t-[1px]" style={{ height: '40%' }} />
-                <div className="flex-1 bg-pink-500/60 rounded-t-[1px]" style={{ height: '80%' }} />
-                <div className="flex-1 bg-blue-500/60 rounded-t-[1px]" style={{ height: '55%' }} />
+                <div 
+                  className="flex-1 rounded-t-[1px]"
+                  style={{ 
+                    height: '40%', 
+                    background: 'var(--accent-primary)',
+                    opacity: 0.6 
+                  }}
+                />
+                <div 
+                  className="flex-1 rounded-t-[1px]"
+                  style={{ 
+                    height: '80%', 
+                    background: 'var(--accent-secondary)',
+                    opacity: 0.6 
+                  }}
+                />
+                <div 
+                  className="flex-1 rounded-t-[1px]"
+                  style={{ 
+                    height: '55%', 
+                    background: 'var(--accent-primary)',
+                    opacity: 0.4 
+                  }}
+                />
               </div>
             </div>
-            <h1 className="font-serif text-4xl text-stone-100">Dashboard</h1>
+            <h1 className="font-serif text-4xl" style={{ color: 'var(--text-primary)' }}>Dashboard</h1>
           </div>
         </div>
         <button 
@@ -127,63 +157,75 @@ const Dashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Top row metrics (restored) */}
+      {/* Top row metrics */}
       <div className="grid grid-cols-4 gap-4">
         <div className="metric-clean">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 rounded-lg bg-stone-800">
-              <Layers className="w-5 h-5 text-stone-400" />
+            <div 
+              className="p-2 rounded-lg"
+              style={{ background: 'var(--bg-tertiary)' }}
+            >
+              <Layers className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
             </div>
             <span className="badge-clean badge-neutral">Total</span>
           </div>
-          <div className="text-3xl font-serif text-stone-100 mb-1">{sessions.length}</div>
-          <div className="text-sm text-stone-500">Training Sessions</div>
+          <div className="text-3xl font-serif mb-1" style={{ color: 'var(--text-primary)' }}>{sessions.length}</div>
+          <div style={{ color: 'var(--text-muted)' }} className="text-sm">Training Sessions</div>
         </div>
 
         <div className="metric-clean">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 rounded-lg bg-amber-900/20">
-              <Activity className="w-5 h-5 text-amber-500" />
+            <div 
+              className="p-2 rounded-lg"
+              style={{ background: 'var(--warning-bg)' }}
+            >
+              <Activity className="w-5 h-5" style={{ color: 'var(--warning-text)' }} />
             </div>
             <span className="badge-clean badge-warning">Active</span>
           </div>
-          <div className="text-3xl font-serif text-stone-100 mb-1">{runningCount}</div>
-          <div className="text-sm text-stone-500">Currently Running</div>
+          <div className="text-3xl font-serif mb-1" style={{ color: 'var(--text-primary)' }}>{runningCount}</div>
+          <div style={{ color: 'var(--text-muted)' }} className="text-sm">Currently Running</div>
         </div>
 
         <div className="metric-clean">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 rounded-lg bg-green-900/20">
-              <TrendingUp className="w-5 h-5 text-green-500" />
+            <div 
+              className="p-2 rounded-lg"
+              style={{ background: 'var(--success-bg)' }}
+            >
+              <TrendingUp className="w-5 h-5" style={{ color: 'var(--success-text)' }} />
             </div>
             <span className="badge-clean badge-success">Done</span>
           </div>
-          <div className="text-3xl font-serif text-stone-100 mb-1">{completedCount}</div>
-          <div className="text-sm text-stone-500">Completed</div>
+          <div className="text-3xl font-serif mb-1" style={{ color: 'var(--text-primary)' }}>{completedCount}</div>
+          <div style={{ color: 'var(--text-muted)' }} className="text-sm">Completed</div>
         </div>
 
         <div className="metric-clean">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 rounded-lg bg-rose-900/20">
-              <Clock className="w-5 h-5 text-rose-500" />
+            <div 
+              className="p-2 rounded-lg"
+              style={{ background: 'rgba(225, 29, 72, 0.1)' }}
+            >
+              <Clock className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
             </div>
-            <span className="text-xs text-stone-500 font-mono">{activeSession ? 'Elapsed' : 'Avg'}</span>
+            <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{activeSession ? 'Elapsed' : 'Avg'}</span>
           </div>
-          <div className="text-3xl font-serif text-stone-100 mb-1">{getTrainingTime()}</div>
-          <div className="text-sm text-stone-500">Training Time</div>
+          <div className="text-3xl font-serif mb-1" style={{ color: 'var(--text-primary)' }}>{getTrainingTime()}</div>
+          <div style={{ color: 'var(--text-muted)' }} className="text-sm">Training Time</div>
         </div>
       </div>
 
-      {/* Main Grid: Segmentation Metrics & Run Info */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 gap-6">
         {/* Run Selector & Info Accordion */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-             <h2 className="text-lg font-serif text-stone-300">Detailed Analytics</h2>
+            <h2 className="text-lg font-serif" style={{ color: 'var(--text-secondary)' }}>Detailed Analytics</h2>
             <select 
               value={selectedSessionId || ''}
               onChange={(e) => setSelectedSessionId(e.target.value)}
-              className="bg-stone-900 border border-stone-800 text-stone-100 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-700 min-w-[200px]"
+              className="input-clean min-w-[200px]"
             >
               {sessions.map(s => (
                 <option key={s.id} value={s.id}>
@@ -193,100 +235,134 @@ const Dashboard: React.FC = () => {
             </select>
           </div>
           <button 
-             onClick={() => setShowRunInfo(!showRunInfo)}
-             className="text-sm text-stone-500 hover:text-stone-300 flex items-center gap-2 transition-colors"
+            onClick={() => setShowRunInfo(!showRunInfo)}
+            className="btn-clean"
           >
-             <Info size={14} />
-             {showRunInfo ? 'Hide Run Configuration' : 'Show Run Configuration'}
+            <Info size={14} />
+            {showRunInfo ? 'Hide Run Configuration' : 'Show Run Configuration'}
           </button>
         </div>
 
         {showRunInfo && (
-           <div className="card-clean bg-stone-900/30 border-dashed">
-              <div className="grid grid-cols-4 gap-6 text-sm">
-                <div>
-                  <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Model Type</span>
-                  <span className="text-stone-200 capitalize">{selectedSession?.model_type || '--'}</span>
-                </div>
-                <div>
-                  <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Total Epochs</span>
-                  <span className="text-stone-200">{selectedSession?.total_epochs || '--'}</span>
-                </div>
-                <div>
-                  <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Start Time</span>
-                  <span className="text-stone-200">
-                    {selectedSession?.start_time ? new Date(selectedSession.start_time * 1000).toLocaleString() : '--'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Dataset Path</span>
-                  <span className="text-stone-200 truncate block max-w-[200px]" title={selectedSession?.config?.dataset_yaml || selectedSession?.config?.data || '--'}>{selectedSession?.config?.dataset_yaml || selectedSession?.config?.data || '--'}</span>
-                </div>
-                {(selectedSession?.config?.imgsz || selectedSession?.config?.batch) && (
-                  <>
-                    <div>
-                      <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Image Size</span>
-                      <span className="text-stone-200">{selectedSession?.config?.imgsz || '--'}</span>
-                    </div>
-                    <div>
-                      <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Batch Size</span>
-                      <span className="text-stone-200">{selectedSession?.config?.batch || '--'}</span>
-                    </div>
-                    <div>
-                      <span className="text-stone-500 block mb-1 uppercase text-[10px] tracking-wider">Learning Rate / Opt</span>
-                      <span className="text-stone-200">{selectedSession?.config?.lr0 || '--'} / {selectedSession?.config?.optimizer || '--'}</span>
-                    </div>
-                  </>
-                )}
+          <div 
+            className="card-clean border-dashed"
+            style={{ background: 'var(--bg-secondary)' }}
+          >
+            <div className="grid grid-cols-4 gap-6 text-sm">
+              <div>
+                <span style={{ color: 'var(--text-muted)' }} className="block mb-1 uppercase text-[10px] tracking-wider">Model Type</span>
+                <span style={{ color: 'var(--text-secondary)' }} className="capitalize">{selectedSession?.model_type || '--'}</span>
               </div>
-           </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }} className="block mb-1 uppercase text-[10px] tracking-wider">Total Epochs</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{selectedSession?.total_epochs || '--'}</span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }} className="block mb-1 uppercase text-[10px] tracking-wider">Start Time</span>
+                <span style={{ color: 'var(--text-secondary)' }}>
+                  {selectedSession?.start_time ? new Date(selectedSession.start_time * 1000).toLocaleString() : '--'}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }} className="block mb-1 uppercase text-[10px] tracking-wider">Dataset Path</span>
+                <span style={{ color: 'var(--text-secondary)' }} className="truncate block max-w-[200px]" title={selectedSession?.config?.dataset_yaml || selectedSession?.config?.data || '--'}>{selectedSession?.config?.dataset_yaml || selectedSession?.config?.data || '--'}</span>
+              </div>
+              {(selectedSession?.config?.imgsz || selectedSession?.config?.batch) && (
+                <>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }} className="block mb-1 uppercase text-[10px] tracking-wider">Image Size</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{selectedSession?.config?.imgsz || '--'}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }} className="block mb-1 uppercase text-[10px] tracking-wider">Batch Size</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{selectedSession?.config?.batch || '--'}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }} className="block mb-1 uppercase text-[10px] tracking-wider">Learning Rate / Opt</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{selectedSession?.config?.lr0 || '--'} / {selectedSession?.config?.optimizer || '--'}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         )}
 
-        {/* Segmentation Metrics Cards (from redesigned dashboard) */}
+        {/* Segmentation Metrics Cards */}
         <div className="grid grid-cols-5 gap-4">
-          <div className="metric-clean py-4 before:bg-purple-500">
-            <span className="text-stone-500 text-[10px] uppercase tracking-wider mb-1 block">F1 Score</span>
-            <div className="text-2xl font-serif text-stone-100">{formatPercent(stats.f1)}</div>
+          <div className="metric-clean py-4" style={{ '--accent-top': '#8b5cf6' } as React.CSSProperties}>
+            <span style={{ color: 'var(--text-muted)' }} className="text-[10px] uppercase tracking-wider mb-1 block">F1 Score</span>
+            <div className="text-2xl font-serif" style={{ color: 'var(--text-primary)' }}>{formatPercent(stats.f1)}</div>
           </div>
-          <div className="metric-clean py-4 before:bg-blue-500">
-            <span className="text-stone-500 text-[10px] uppercase tracking-wider mb-1 block">Precision</span>
-            <div className="text-2xl font-serif text-stone-100">{formatPercent(stats.precision)}</div>
+          <div className="metric-clean py-4" style={{ '--accent-top': '#3b82f6' } as React.CSSProperties}>
+            <span style={{ color: 'var(--text-muted)' }} className="text-[10px] uppercase tracking-wider mb-1 block">Precision</span>
+            <div className="text-2xl font-serif" style={{ color: 'var(--text-primary)' }}>{formatPercent(stats.precision)}</div>
           </div>
-          <div className="metric-clean py-4 before:bg-pink-500">
-            <span className="text-stone-500 text-[10px] uppercase tracking-wider mb-1 block">Recall</span>
-            <div className="text-2xl font-serif text-stone-100">{formatPercent(stats.recall)}</div>
+          <div className="metric-clean py-4" style={{ '--accent-top': '#ec4899' } as React.CSSProperties}>
+            <span style={{ color: 'var(--text-muted)' }} className="text-[10px] uppercase tracking-wider mb-1 block">Recall</span>
+            <div className="text-2xl font-serif" style={{ color: 'var(--text-primary)' }}>{formatPercent(stats.recall)}</div>
           </div>
-          <div className="metric-clean py-4 before:bg-green-500">
-            <span className="text-stone-500 text-[10px] uppercase tracking-wider mb-1 block">mAP50</span>
-            <div className="text-2xl font-serif text-stone-100">{formatPercent(stats.mAP50)}</div>
+          <div className="metric-clean py-4">
+            <span style={{ color: 'var(--text-muted)' }} className="text-[10px] uppercase tracking-wider mb-1 block">mAP50</span>
+            <div className="text-2xl font-serif" style={{ color: 'var(--text-primary)' }}>{formatPercent(stats.mAP50)}</div>
           </div>
-          <div className="metric-clean py-4 before:bg-amber-500">
-            <span className="text-stone-500 text-[10px] uppercase tracking-wider mb-1 block">mAP50-95</span>
-            <div className="text-2xl font-serif text-stone-100">{formatPercent(stats.mAP50_95)}</div>
+          <div className="metric-clean py-4" style={{ '--accent-top': '#f59e0b' } as React.CSSProperties}>
+            <span style={{ color: 'var(--text-muted)' }} className="text-[10px] uppercase tracking-wider mb-1 block">mAP50-95</span>
+            <div className="text-2xl font-serif" style={{ color: 'var(--text-primary)' }}>{formatPercent(stats.mAP50_95)}</div>
           </div>
         </div>
 
-        {/* Charts Grid - Hidden for now */}
-
-        {/* System Status (Very small as requested) */}
-        <div className="flex items-center gap-6 pt-6 border-t border-stone-800">
-          <div className="flex items-center gap-3 bg-stone-900/50 px-4 py-2 rounded-lg border border-stone-800">
-             <Cpu size={14} className="text-stone-500" />
-             <span className="text-xs text-stone-400 font-mono">GPU: {gpuStats?.temperature || '--'}°C</span>
-             <div className="w-20 h-1.5 bg-stone-800 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500" style={{ width: `${gpuStats?.utilization || 0}%` }} />
-             </div>
-             <span className="text-[10px] text-stone-500 uppercase">{gpuStats?.utilization || 0}% UTIL</span>
+        {/* System Status - Fixed Contrast */}
+        <div 
+          className="flex items-center gap-6 pt-6"
+          style={{ borderTop: '1px solid var(--border-primary)' }}
+        >
+          {/* GPU Status */}
+          <div 
+            className="flex items-center gap-3 px-4 py-2 rounded-lg"
+            style={{ 
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--border-primary)'
+            }}
+          >
+            <Cpu size={14} style={{ color: 'var(--text-muted)' }} />
+            <span className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>GPU: {gpuStats?.temperature || '--'}°C</span>
+            <div 
+              className="w-20 h-1.5 rounded-full overflow-hidden"
+              style={{ background: 'var(--bg-tertiary)' }}
+            >
+              <div 
+                className="h-full rounded-full"
+                style={{ 
+                  width: `${gpuStats?.utilization || 0}%`,
+                  background: 'var(--accent-primary)'
+                }} 
+              />
+            </div>
+            <span className="text-[10px] uppercase" style={{ color: 'var(--text-muted)' }}>{gpuStats?.utilization || 0}% UTIL</span>
           </div>
 
-          <div className="flex items-center gap-3 bg-stone-900/50 px-4 py-2 rounded-lg border border-stone-800">
-             <HardDrive size={14} className="text-stone-500" />
-             <span className="text-xs text-stone-400 font-mono">SSD: HEALTHY</span>
+          {/* SSD Status */}
+          <div 
+            className="flex items-center gap-3 px-4 py-2 rounded-lg"
+            style={{ 
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--border-primary)'
+            }}
+          >
+            <HardDrive size={14} style={{ color: 'var(--text-muted)' }} />
+            <span className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>SSD: HEALTHY</span>
           </div>
 
-          <div className="flex items-center gap-3 bg-stone-900/50 px-4 py-2 rounded-lg border border-stone-800 ml-auto">
-             <Activity size={14} className="text-stone-500" />
-             <span className="text-xs text-green-500 uppercase font-medium">System Online</span>
+          {/* System Online */}
+          <div 
+            className="flex items-center gap-3 px-4 py-2 rounded-lg ml-auto"
+            style={{ 
+              background: 'var(--success-bg)', 
+              border: '1px solid var(--border-primary)'
+            }}
+          >
+            <Activity size={14} style={{ color: 'var(--success-text)' }} />
+            <span className="text-xs uppercase font-medium" style={{ color: 'var(--success-text)' }}>System Online</span>
           </div>
         </div>
       </div>

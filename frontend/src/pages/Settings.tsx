@@ -7,19 +7,25 @@ const SettingsPage: React.FC = () => {
     <div className="space-y-6">
       <Panel title="Application Settings">
         <div className="space-y-6">
-          <div className="flex items-center justify-between py-3 border-b border-gray-800">
+          <div 
+            className="flex items-center justify-between py-3"
+            style={{ borderBottom: '1px solid var(--border-primary)' }}
+          >
             <div>
-              <div className="text-gray-200">Backend URL</div>
-              <div className="text-sm text-gray-500 font-mono">
+              <div style={{ color: 'var(--text-secondary)' }}>Backend URL</div>
+              <div className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
                 {import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-3 border-b border-gray-800">
+          <div 
+            className="flex items-center justify-between py-3"
+            style={{ borderBottom: '1px solid var(--border-primary)' }}
+          >
             <div>
-              <div className="text-gray-200">WebSocket URL</div>
-              <div className="text-sm text-gray-500 font-mono">
+              <div style={{ color: 'var(--text-secondary)' }}>WebSocket URL</div>
+              <div className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
                 {import.meta.env.VITE_WS_URL || 'ws://localhost:8000'}
               </div>
             </div>
@@ -30,16 +36,19 @@ const SettingsPage: React.FC = () => {
       <Panel title="About">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-lg bg-vintage-orange/20 flex items-center justify-center">
-              <Settings size={32} className="text-vintage-orange" />
+            <div 
+              className="w-16 h-16 rounded-lg flex items-center justify-center"
+              style={{ background: 'var(--accent-glow)' }}
+            >
+              <Settings size={32} style={{ color: 'var(--accent-primary)' }} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-200">Crack Lab</h3>
-              <p className="text-sm text-gray-500">Version 1.0.0</p>
+              <h3 className="text-xl font-bold" style={{ color: 'var(--text-secondary)' }}>Crack Lab</h3>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Version 1.0.0</p>
             </div>
           </div>
 
-          <p className="text-gray-400 text-sm leading-relaxed">
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
             An interface for training and deploying 
             crack detection models using YOLO architectures. Features real-time 
             GPU monitoring and WebSocket updates.
@@ -50,30 +59,43 @@ const SettingsPage: React.FC = () => {
               href="https://github.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-gray-400 hover:text-vintage-orange transition-colors"
+              className="flex items-center gap-2 transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
             >
               <Github size={18} />
               <span className="text-sm">GitHub Repository</span>
             </a>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-800">
-            <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+          <div 
+            className="mt-6 pt-6"
+            style={{ borderTop: '1px solid var(--border-primary)' }}
+          >
+            <h4 
+              className="text-sm font-semibold mb-3 flex items-center gap-2"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               <Info size={16} />
               System Information
             </h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">Framework:</span>
-                <span className="text-gray-300 ml-2">FastAPI + React 18</span>
+                <span style={{ color: 'var(--text-muted)' }}>Framework:</span>
+                <span className="ml-2" style={{ color: 'var(--text-secondary)' }}>FastAPI + React 18</span>
               </div>
               <div>
-                <span className="text-gray-500">ML Backend:</span>
-                <span className="text-gray-300 ml-2">Ultralytics YOLO</span>
+                <span style={{ color: 'var(--text-muted)' }}>ML Backend:</span>
+                <span className="ml-2" style={{ color: 'var(--text-secondary)' }}>Ultralytics YOLO</span>
               </div>
               <div>
-                <span className="text-gray-500">Storage:</span>
-                <span className="text-gray-300 ml-2">SQLite Database</span>
+                <span style={{ color: 'var(--text-muted)' }}>Storage:</span>
+                <span className="ml-2" style={{ color: 'var(--text-secondary)' }}>SQLite Database</span>
               </div>
             </div>
           </div>
