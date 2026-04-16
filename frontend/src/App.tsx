@@ -9,6 +9,7 @@ import Models from './pages/Models';
 import Settings from './pages/Settings';
 import Evaluation from './pages/Evaluation';
 import Demo from './pages/Demo';
+import Visualization from './pages/Visualization';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/models" element={<Models />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/demo" element={<Demo />} />
+          <Route path="/visualization" element={<Visualization />} />
         </Routes>
       </Layout>
     </ThemeProvider>

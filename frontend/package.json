@@ -14,17 +14,20 @@
     "@react-three/fiber": "^9.5.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/three": "^0.182.0",
+    "@xyflow/react": "^12.10.2",
     "autoprefixer": "^10.4.24",
     "axios": "^1.13.4",
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
     "postcss": "^8.5.6",
+    "prismjs": "^1.30.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^6.30.0",
     "recharts": "^3.7.0",
     "tailwindcss": "^4.1.18",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -1,0 +1,64 @@
+.flow-canvas {
+  width: 100%;
+  flex: 1;
+  background: #1a1a1a;
+  overflow: hidden;
+}
+
+/* React Flow customizations for horizontal layout */
+.react-flow__node {
+  cursor: default;
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  background: #646cff;
+  border: 2px solid #1a1a1a;
+}
+
+.react-flow__handle:hover {
+  background: #535bf2;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #646cff;
+  stroke-width: 3;
+}
+
+.react-flow__edge-text {
+  fill: #fff;
+  font-size: 10px;
+}
+
+.react-flow__controls {
+  background: #2a2a2a;
+  border: 1px solid #444;
+}
+
+.react-flow__controls-button {
+  background: #2a2a2a;
+  border-bottom: 1px solid #444;
+  color: #fff;
+}
+
+.react-flow__controls-button:hover {
+  background: #3a3a3a;
+}
+
+.react-flow__minimap {
+  background: #2a2a2a;
+  border: 1px solid #444;
+}
+
+.react-flow__background {
+  color: #333;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}

@@ -1,0 +1,225 @@
+/* Concept Dialog Styles */
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.dialog-content {
+  position: relative;
+  max-width: 800px;
+  max-height: 90vh;
+  width: 100%;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.concept-dialog {
+  border: 1px solid #3a3a3a;
+}
+
+.dialog-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #333;
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+.dialog-close:hover {
+  background: #f59e0b;
+  color: #000;
+  transform: scale(1.1);
+}
+
+.concept-dialog-body {
+  padding: 32px;
+  overflow-y: auto;
+  color: #e0e0e0;
+}
+
+.concept-dialog-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.concept-dialog-body::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.concept-dialog-body::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.concept-dialog-body::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+.concept-title {
+  margin: 0 0 24px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #f59e0b;
+  border-bottom: 2px solid #f59e0b;
+  padding-bottom: 12px;
+}
+
+.concept-explanation {
+  margin-bottom: 32px;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.concept-explanation p {
+  margin: 0 0 16px 0;
+}
+
+.concept-explanation p:last-child {
+  margin-bottom: 0;
+}
+
+.concept-explanation strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.concept-explanation ul,
+.concept-explanation ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.concept-explanation li {
+  margin: 8px 0;
+}
+
+/* Math rendering */
+.math-block {
+  display: block;
+  margin: 20px 0;
+  padding: 16px;
+  background: #2a2a2a;
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #3b82f6;
+}
+
+.math-inline {
+  font-family: 'Courier New', monospace;
+  background: #2a2a2a;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 14px;
+  color: #3b82f6;
+}
+
+/* Code section */
+.concept-code-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #3a3a3a;
+}
+
+.concept-code-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.concept-code {
+  display: block;
+  margin: 0;
+  padding: 20px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c9d1d9;
+}
+
+.concept-code::-webkit-scrollbar {
+  height: 8px;
+}
+
+.concept-code::-webkit-scrollbar-track {
+  background: #161b22;
+}
+
+.concept-code::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+
+.concept-code::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+.concept-file-ref {
+  margin: 12px 0 0 0;
+  font-size: 13px;
+  color: #888;
+  font-style: italic;
+}
+
+.concept-file-ref strong {
+  color: #aaa;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dialog-content {
+    max-width: 95%;
+    max-height: 95vh;
+  }
+
+  .concept-dialog-body {
+    padding: 24px 20px;
+  }
+
+  .concept-title {
+    font-size: 24px;
+  }
+
+  .concept-explanation {
+    font-size: 14px;
+  }
+
+  .concept-code {
+    font-size: 12px;
+    padding: 16px;
+  }
+}
