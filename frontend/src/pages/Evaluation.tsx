@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getTrainingSessions } from '../api';
 import { Activity, ChevronRight, BarChart3, X, Check } from 'lucide-react';
+import RadarChart from '../components/charts/RadarChart';
 
 const Evaluation: React.FC = () => {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -41,25 +42,7 @@ const Evaluation: React.FC = () => {
 
   const selectedSessions = sessions.filter(s => selectedForCompare.has(s.id));
 
-  // Calculate max values for bar chart normalization
-  const getMaxValue = (key: string) => {
-    if (selectedSessions.length === 0) return 1;
-    const values = selectedSessions.map(s => s.latest_metrics?.[key] || 0);
-    return Math.max(...values, 0.0001);
-  };
 
-  const maxF1 = getMaxValue('f1');
-  const maxPrecision = getMaxValue('precision');
-  const maxRecall = getMaxValue('recall');
-  const maxmAP50 = getMaxValue('mAP50');
-  const maxmAP50_95 = getMaxValue('mAP50_95');
-
-  const metricColors = [
-    'var(--accent-primary)',
-    'var(--success-text)', 
-    'var(--warning-text)',
-    '#8b5cf6' // purple for 4th
-  ];
 
   return (
     <div className="space-y-6 h-full overflow-auto pb-12">
@@ -364,160 +347,24 @@ const Evaluation: React.FC = () => {
             </div>
           </div>
 
-          {/* Visual Bar Chart Comparison */}
-          <div className="card-clean">
-            <h3 className="text-lg font-serif mb-6" style={{ color: 'var(--text-secondary)' }}>Performance Metrics Comparison</h3>
-            
-            {['F1 Score', 'Precision', 'Recall', 'mAP50', 'mAP50-95'].map((metricName) => {
-              const key = metricName.toLowerCase().replace('-', '_');
-              const maxVal = metricName === 'F1 Score' ? maxF1 : 
-                           metricName === 'Precision' ? maxPrecision :
-                           metricName === 'Recall' ? maxRecall :
-                           metricName === 'mAP50' ? maxmAP50 : maxmAP50_95;
-              
-              return (
-                <div key={metricName} className="mb-6">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{metricName}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {selectedSessions.map((session, idx) => {
-                      const value = session.latest_metrics?.[key] || 0;
-                      const percentage = (value / maxVal) * 100;
-                      
-                      return (
-                        <div key={session.id} className="flex items-center gap-3">
-                          <div className="w-24 text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-                            Run {session.id}
-                          </div>
-                          <div className="flex-1 h-8 rounded-lg overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
-                            <div
-                              className="h-full flex items-center px-3 text-xs font-medium transition-all duration-500"
-                              style={{ 
-                                width: `${percentage}%`,
-                                background: metricColors[idx % metricColors.length],
-                                color: 'white',
-                                minWidth: percentage > 10 ? 'auto' : '30px'
-                              }}
-                            >
-                              {value !== undefined ? `${(value * 100).toFixed(1)}%` : '--'}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Side-by-Side Comparison Table */}
-          <div className="card-clean overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr 
-                    className="text-[11px] uppercase tracking-wider"
-                    style={{ 
-                      background: 'var(--bg-secondary)', 
-                      color: 'var(--text-muted)',
-                      borderBottom: '1px solid var(--border-primary)'
-                    }}
-                  >
-                    <th className="py-4 px-4 font-medium">Metric</th>
-                    {selectedSessions.map((session, idx) => (
-                      <th 
-                        key={session.id} 
-                        className="py-4 px-4 font-medium text-center"
-                        style={{ color: metricColors[idx % metricColors.length] }}
-                      >
-                        Run {session.id}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody 
-                  className="text-sm"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  {[
-                    { label: 'Model Type', key: 'model_type', getValue: (s: any) => s.model_type || '--' },
-                    { label: 'Dataset', key: 'dataset', getValue: (s: any) => s.config?.dataset_yaml?.split(/[\\/]/).pop() || 'data.yaml' },
-                    { label: 'Epochs', key: 'epochs', getValue: (s: any) => s.total_epochs || s.config?.epochs || '--' },
-                    { label: 'Image Size', key: 'imgsz', getValue: (s: any) => s.config?.imgsz || '--' },
-                    { label: 'Batch Size', key: 'batch', getValue: (s: any) => s.config?.batch || '--' },
-                    { label: 'Learning Rate', key: 'lr0', getValue: (s: any) => s.config?.lr0 || '--' },
-                    { label: 'Optimizer', key: 'optimizer', getValue: (s: any) => s.config?.optimizer || 'Adam' },
-                    { label: 'F1 Score', key: 'f1', getValue: (s: any) => s.latest_metrics?.f1 !== undefined ? `${(s.latest_metrics.f1 * 100).toFixed(1)}%` : '--' },
-                    { label: 'Precision', key: 'precision', getValue: (s: any) => s.latest_metrics?.precision !== undefined ? `${(s.latest_metrics.precision * 100).toFixed(1)}%` : '--' },
-                    { label: 'Recall', key: 'recall', getValue: (s: any) => s.latest_metrics?.recall !== undefined ? `${(s.latest_metrics.recall * 100).toFixed(1)}%` : '--' },
-                    { label: 'mAP50', key: 'mAP50', getValue: (s: any) => s.latest_metrics?.mAP50 !== undefined ? `${(s.latest_metrics.mAP50 * 100).toFixed(1)}%` : '--' },
-                    { label: 'mAP50-95', key: 'mAP50_95', getValue: (s: any) => s.latest_metrics?.mAP50_95 !== undefined ? `${(s.latest_metrics.mAP50_95 * 100).toFixed(1)}%` : '--' },
-                    { label: 'Final Loss', key: 'box_loss', getValue: (s: any) => s.latest_metrics?.box_loss?.toFixed(4) || '--' },
-                  ].map((row, rowIdx) => (
-                    <tr 
-                      key={row.key}
-                      style={{ 
-                        borderBottom: rowIdx < 12 ? '1px solid var(--border-primary)' : 'none',
-                        background: rowIdx % 2 === 0 ? 'transparent' : 'var(--bg-secondary)'
-                      }}
-                    >
-                      <td className="py-3 px-4 font-medium" style={{ color: 'var(--text-muted)' }}>{row.label}</td>
-                      {selectedSessions.map((session) => (
-                        <td key={session.id} className="py-3 px-4 text-center font-mono">
-                          {row.getValue(session)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Model Details Cards */}
-          <div className="grid grid-cols-2 gap-4">
-            {selectedSessions.map((session, idx) => (
-              <div 
-                key={session.id}
-                className="card-clean"
-                style={{ borderLeft: `3px solid ${metricColors[idx % metricColors.length]}` }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                    Run {session.id}
-                  </h4>
-                  <span 
-                    className="text-xs px-2 py-1 rounded"
-                    style={{ 
-                      background: 'var(--bg-tertiary)', 
-                      color: metricColors[idx % metricColors.length]
-                    }}
-                  >
-                    {session.model_type}
-                  </span>
-                </div>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span style={{ color: 'var(--text-muted)' }}>Created:</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>
-                      {session.start_time ? new Date(session.start_time * 1000).toLocaleDateString() : '--'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span style={{ color: 'var(--text-muted)' }}>Epochs:</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>{session.total_epochs || session.config?.epochs || '--'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span style={{ color: 'var(--text-muted)' }}>Dataset:</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>
-                      {session.config?.dataset_yaml?.split(/[\\/]/).pop() || 'data.yaml'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+          {/* Radar Chart Comparison */}
+          <div className="card-clean flex flex-col items-center">
+            <h3 className="text-lg font-serif mb-2" style={{ color: 'var(--text-secondary)' }}>
+              Performance Metrics Comparison
+            </h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+              Click legend items to toggle model visibility • Hover points for exact values
+            </p>
+            <RadarChart 
+              sessions={selectedSessions}
+              metrics={[
+                { key: 'f1', label: 'F1 Score', max: 1.0 },
+                { key: 'precision', label: 'Precision', max: 1.0 },
+                { key: 'recall', label: 'Recall', max: 1.0 },
+                { key: 'mAP50', label: 'mAP50', max: 1.0 },
+                { key: 'mAP50_95', label: 'mAP50-95', max: 1.0 }
+              ]}
+            />
           </div>
         </div>
       )}
