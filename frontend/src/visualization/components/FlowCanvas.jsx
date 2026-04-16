@@ -188,11 +188,15 @@ export default function FlowCanvas({ nodes: initialNodes, edges: initialEdges, n
         snapGrid={[15, 15]}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        connectionLineStyle={{ stroke: '#22c55e', strokeWidth: 2 }}
+        connectionLineStyle={{ stroke: '#ffffff', strokeWidth: 3, strokeDasharray: '6,4' }}
         defaultEdgeOptions={{
-          type: 'smoothstep',
+          type: 'straight',
           animated: true,
-          style: { stroke: '#57534e', strokeWidth: 2 }
+          style: { 
+            stroke: '#ffffff', 
+            strokeWidth: 3,
+            strokeDasharray: '6,4'
+          }
         }}
       >
         <Background />

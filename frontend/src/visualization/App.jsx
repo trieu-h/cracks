@@ -90,57 +90,127 @@ function App() {
     runDetection, resetMetrics
   ]);
 
-  // Define edges connecting the workflow - use hardcoded colors for SVG
+  // Define edges connecting the workflow - white dotted lines with flowing animation
   const edges = useMemo(() => [
     {
       id: 'e-dataset-model',
       source: 'dataset',
       target: 'model',
-      type: 'smoothstep',
-      animated: true,
+      type: 'straight',
+      animated: true,  // Enable dashdraw animation
       label: 'Data',
-      style: { stroke: '#22c55e', strokeWidth: 2 },
-      labelStyle: { fill: '#22c55e', fontSize: 12, fontWeight: 500 }
+      style: { 
+        stroke: '#ffffff', 
+        strokeWidth: 3,
+        strokeDasharray: '6,4'
+      },
+      labelStyle: { 
+        fill: '#ffffff', 
+        fontSize: 12, 
+        fontWeight: 700
+      },
+      labelBgStyle: {
+        fill: '#0c0a09',
+        fillOpacity: 1,
+        stroke: '#ffffff',
+        strokeWidth: 1
+      }
     },
     {
       id: 'e-model-training',
       source: 'model',
       target: 'training',
-      type: 'smoothstep',
+      type: 'straight',
       animated: true,
       label: 'Architecture',
-      style: { stroke: '#4ade80', strokeWidth: 2 },
-      labelStyle: { fill: '#4ade80', fontSize: 12, fontWeight: 500 }
+      style: { 
+        stroke: '#ffffff', 
+        strokeWidth: 3,
+        strokeDasharray: '6,4'
+      },
+      labelStyle: { 
+        fill: '#ffffff', 
+        fontSize: 12, 
+        fontWeight: 700
+      },
+      labelBgStyle: {
+        fill: '#0c0a09',
+        fillOpacity: 1,
+        stroke: '#ffffff',
+        strokeWidth: 1
+      }
     },
     {
       id: 'e-training-detection',
       source: 'training',
       target: 'detection',
-      type: 'smoothstep',
+      type: 'straight',
       animated: true,
       label: 'Model Weights',
-      style: { stroke: '#22c55e', strokeWidth: 2 },
-      labelStyle: { fill: '#22c55e', fontSize: 12, fontWeight: 500 }
+      style: { 
+        stroke: '#ffffff', 
+        strokeWidth: 3,
+        strokeDasharray: '6,4'
+      },
+      labelStyle: { 
+        fill: '#ffffff', 
+        fontSize: 12, 
+        fontWeight: 700
+      },
+      labelBgStyle: {
+        fill: '#0c0a09',
+        fillOpacity: 1,
+        stroke: '#ffffff',
+        strokeWidth: 1
+      }
     },
     {
       id: 'e-training-metrics',
       source: 'training',
       target: 'metrics',
-      type: 'smoothstep',
+      type: 'straight',
       animated: true,
       label: 'Validation',
-      style: { stroke: '#3b82f6', strokeWidth: 2 },
-      labelStyle: { fill: '#3b82f6', fontSize: 12, fontWeight: 500 }
+      style: { 
+        stroke: '#ffffff', 
+        strokeWidth: 3,
+        strokeDasharray: '6,4'
+      },
+      labelStyle: { 
+        fill: '#ffffff', 
+        fontSize: 12, 
+        fontWeight: 700
+      },
+      labelBgStyle: {
+        fill: '#0c0a09',
+        fillOpacity: 1,
+        stroke: '#ffffff',
+        strokeWidth: 1
+      }
     },
     {
       id: 'e-detection-metrics',
       source: 'detection',
       target: 'metrics',
-      type: 'smoothstep',
-      animated: false,
+      type: 'straight',
+      animated: true,
       label: 'Predictions',
-      style: { stroke: '#f59e0b', strokeWidth: 2 },
-      labelStyle: { fill: '#f59e0b', fontSize: 12, fontWeight: 500 }
+      style: { 
+        stroke: '#ffffff', 
+        strokeWidth: 3,
+        strokeDasharray: '6,4'
+      },
+      labelStyle: { 
+        fill: '#ffffff', 
+        fontSize: 12, 
+        fontWeight: 700
+      },
+      labelBgStyle: {
+        fill: '#0c0a09',
+        fillOpacity: 1,
+        stroke: '#ffffff',
+        strokeWidth: 1
+      }
     }
   ], []);
 

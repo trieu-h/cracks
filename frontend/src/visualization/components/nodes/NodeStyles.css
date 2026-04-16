@@ -26,28 +26,76 @@
   right: -6px !important;
 }
 
-/* React Flow edge styles */
-.react-flow__edge-path {
-  stroke-width: 2px !important;
+/* ============================================
+   REACT FLOW EDGE STYLES - HIGHLY VISIBLE DOTTED LINES
+   ============================================ */
+
+/* Ensure edges container is visible */
+.react-flow__edges {
+  z-index: 5 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-.react-flow__edge-text {
-  font-size: 12px !important;
-  font-weight: 500 !important;
+/* Force all edges to be visible */
+.react-flow__edge {
+  pointer-events: all !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
+/* SVG path - WHITE dotted lines with flowing animation */
+.react-flow__connection-path,
+.react-flow__edge-path,
+svg .react-flow__edge-path,
+.react-flow__edges svg path {
+  stroke: #ffffff !important;
+  stroke-width: 3px !important;
+  stroke-linecap: round !important;
+  stroke-dasharray: 6, 4 !important;
+  fill: none !important;
+  pointer-events: stroke !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Animated flowing effect - dashdraw animation */
 .react-flow__edge.animated .react-flow__edge-path {
-  stroke-dasharray: 5, 5 !important;
   animation: dashdraw 0.5s linear infinite !important;
 }
 
 @keyframes dashdraw {
   from {
-    stroke-dashoffset: 10;
+    stroke-dashoffset: 20;
   }
   to {
     stroke-dashoffset: 0;
   }
+}
+
+/* Edge labels - WHITE text */
+.react-flow__edge-textwrapper {
+  z-index: 10 !important;
+}
+
+.react-flow__edge-text {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  fill: #ffffff !important;
+  pointer-events: none !important;
+}
+
+.react-flow__edge-textbg {
+  fill: #0c0a09 !important;
+  fill-opacity: 1 !important;
+  stroke: #ffffff !important;
+  stroke-width: 1px !important;
+}
+
+/* Selected edge highlight */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #e5e5e5 !important;
+  stroke-width: 4px !important;
 }
 
 /* ============================================

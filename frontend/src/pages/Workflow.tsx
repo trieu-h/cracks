@@ -6,9 +6,9 @@ import '@xyflow/react/dist/style.css';
 import '../visualization/App.css';
 import '../visualization/components/nodes/NodeStyles.css';
 
-const Visualization: React.FC = () => {
+const Workflow: React.FC = () => {
   return (
-    <div className="visualization-page" style={{ height: 'calc(100vh - 100px)', width: '100%' }}>
+    <div className="workflow-page" style={{ height: 'calc(100vh - 100px)', width: '100%' }}>
       <ReactFlowProvider>
         <NnfsApp />
       </ReactFlowProvider>
@@ -16,4 +16,4 @@ const Visualization: React.FC = () => {
   );
 };
 
-export default Visualization;
+export default Workflow;
