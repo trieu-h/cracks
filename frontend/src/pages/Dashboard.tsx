@@ -221,7 +221,7 @@ const Dashboard: React.FC = () => {
         {/* Run Selector & Info Accordion */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-serif" style={{ color: 'var(--text-secondary)' }}>Detailed Analytics</h2>
+            <h2 className="text-lg font-serif whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>Detailed Analytics</h2>
             <select 
               value={selectedSessionId || ''}
               onChange={(e) => setSelectedSessionId(e.target.value)}
