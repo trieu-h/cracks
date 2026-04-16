@@ -37,11 +37,12 @@ function App() {
   const resetMetrics = useCrackDetectionStore(state => state.resetMetrics);
 
   // Define nodes for the crack detection workflow
+  // Flow: Dataset → Model Architecture → Training Monitor → [Detection ↑ Metrics Dashboard]
   const nodes = useMemo(() => [
     {
       id: 'dataset',
       type: 'dataset',
-      position: { x: 50, y: 100 },
+      position: { x: 50, y: 455 },
       data: {
         config: datasetConfig,
         onConfigChange: updateDatasetConfig,
@@ -50,7 +51,7 @@ function App() {
     {
       id: 'model',
       type: 'model',
-      position: { x: 450, y: 100 },
+      position: { x: 500, y: 400 },
       data: {
         config: modelConfig,
         onConfigChange: updateModelConfig,
@@ -59,7 +60,7 @@ function App() {
     {
       id: 'training',
       type: 'training',
-      position: { x: 850, y: 100 },
+      position: { x: 950, y: 400 },
       data: {
         state: trainingState,
         onStart: startTraining,
@@ -69,7 +70,7 @@ function App() {
     {
       id: 'detection',
       type: 'detection',
-      position: { x: 450, y: 450 },
+      position: { x: 2000, y: 150 },
       data: {
         results: detectionResults,
         onRunDetection: runDetection,
@@ -78,7 +79,7 @@ function App() {
     {
       id: 'metrics',
       type: 'metrics',
-      position: { x: 850, y: 450 },
+      position: { x: 2000, y: 650 },
       data: {
         metrics: metrics,
         onReset: resetMetrics,
@@ -91,6 +92,7 @@ function App() {
   ]);
 
   // Define edges connecting the workflow - white dotted lines with flowing animation
+  // Flow: Dataset -> Model Architecture -> Training Monitor -> Detection -> Metrics Dashboard
   const edges = useMemo(() => [
     {
       id: 'e-dataset-model',
@@ -170,31 +172,7 @@ function App() {
       target: 'metrics',
       type: 'straight',
       animated: true,
-      label: 'Validation',
-      style: { 
-        stroke: '#ffffff', 
-        strokeWidth: 3,
-        strokeDasharray: '6,4'
-      },
-      labelStyle: { 
-        fill: '#ffffff', 
-        fontSize: 12, 
-        fontWeight: 700
-      },
-      labelBgStyle: {
-        fill: '#0c0a09',
-        fillOpacity: 1,
-        stroke: '#ffffff',
-        strokeWidth: 1
-      }
-    },
-    {
-      id: 'e-detection-metrics',
-      source: 'detection',
-      target: 'metrics',
-      type: 'straight',
-      animated: true,
-      label: 'Predictions',
+      label: 'Validation Metrics',
       style: { 
         stroke: '#ffffff', 
         strokeWidth: 3,

@@ -12,14 +12,17 @@ const MiniChart = ({ data, color, width = 200, height = 60 }) => {
     if (!canvas || data.length < 2) return;
 
     const ctx = canvas.getContext('2d');
-    canvas.width = width * 2;
-    canvas.height = height * 2;
-    ctx.scale(2, 2);
+    const dpr = window.devicePixelRatio || 2;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
 
-    ctx.clearRect(0, 0, width, height);
+    // Clear with light background
+    ctx.fillStyle = '#1c1917';  // Dark but visible background
+    ctx.fillRect(0, 0, width, height);
 
-    // Draw grid
-    ctx.strokeStyle = 'var(--border-primary)';
+    // Draw subtle grid lines
+    ctx.strokeStyle = '#44403c';  // Visible gray
     ctx.lineWidth = 0.5;
     ctx.beginPath();
     for (let i = 1; i < 4; i++) {
@@ -29,14 +32,16 @@ const MiniChart = ({ data, color, width = 200, height = 60 }) => {
     }
     ctx.stroke();
 
-    // Draw line
+    // Draw chart line with bright color
     const maxVal = Math.max(...data, 1);
     const minVal = Math.min(...data, 0);
     const range = maxVal - minVal || 1;
 
     ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#4ade80';  // Bright green, always visible
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     
     data.forEach((val, i) => {
       const x = (i / (data.length - 1)) * width;
@@ -47,11 +52,19 @@ const MiniChart = ({ data, color, width = 200, height = 60 }) => {
     });
     ctx.stroke();
 
-    // Draw current point
+    // Draw current point with glow effect
     const lastY = height - ((data[data.length - 1] - minVal) / range) * (height - 10) - 5;
+    
+    // Glow
     ctx.beginPath();
-    ctx.arc(width - 2, lastY, 3, 0, Math.PI * 2);
-    ctx.fillStyle = color;
+    ctx.arc(width - 4, lastY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
+    ctx.fill();
+    
+    // Point
+    ctx.beginPath();
+    ctx.arc(width - 4, lastY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#4ade80';
     ctx.fill();
   }, [data, color, width, height]);
 
