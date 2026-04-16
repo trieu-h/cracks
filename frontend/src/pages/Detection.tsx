@@ -521,7 +521,7 @@ const Detection: React.FC = () => {
             </div>
 
             {/* Secondary Controls Row */}
-            <div className="flex gap-4 mt-4 flex-wrap">
+            <div className="flex gap-4 mt-4 flex-wrap items-center">
               {activeTab === 'video' && (
                 <div style={{ minWidth: '300px', flex: '1 1 300px' }}>
                   <label className="text-xs" style={{ color: 'var(--text-muted)' }}>Frame Sample Interval (lower = more accurate but slower)</label>
@@ -541,7 +541,10 @@ const Detection: React.FC = () => {
                 </div>
               )}
               {progress && (
-                <p className="text-xs text-blue-400 mt-2 animate-pulse">{progress}</p>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-tertiary)' }}>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--accent-primary)' }} />
+                  <p className="text-xs font-medium" style={{ color: 'var(--accent-primary)' }}>{progress}</p>
+                </div>
               )}
             </div>
 
