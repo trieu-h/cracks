@@ -42,7 +42,7 @@ function App() {
     {
       id: 'dataset',
       type: 'dataset',
-      position: { x: 50, y: 455 },
+      position: { x: 0, y: 455 },
       data: {
         config: datasetConfig,
         onConfigChange: updateDatasetConfig,
@@ -70,7 +70,7 @@ function App() {
     {
       id: 'detection',
       type: 'detection',
-      position: { x: 2000, y: 150 },
+      position: { x: 1500, y: 150 },
       data: {
         results: detectionResults,
         onRunDetection: runDetection,
@@ -79,7 +79,7 @@ function App() {
     {
       id: 'metrics',
       type: 'metrics',
-      position: { x: 2000, y: 650 },
+      position: { x: 1500, y: 650 },
       data: {
         metrics: metrics,
         onReset: resetMetrics,

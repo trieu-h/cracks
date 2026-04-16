@@ -197,38 +197,6 @@ const DetectionNode = ({ data }) => {
           </div>
         )}
 
-        {/* Settings */}
-        <div className="settings-row">
-          <button 
-            className="settings-toggle"
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            <Settings size={14} />
-            <span>Settings</span>
-          </button>
-          
-          {showSettings && (
-            <div className="settings-panel">
-              <div className="setting-item">
-                <label>Confidence Threshold</label>
-                <input 
-                  type="range" 
-                  min="0.1" 
-                  max="0.9" 
-                  step="0.1"
-                  value={confidence}
-                  onChange={(e) => setConfidence(parseFloat(e.target.value))}
-                />
-                <span>{(confidence * 100).toFixed(0)}%</span>
-              </div>
-              <div className="setting-item">
-                <label>IoU Threshold (NMS)</label>
-                <input type="range" min="0.3" max="0.7" step="0.1" defaultValue="0.45" />
-                <span>45%</span>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
       <Handle type="source" position={Position.Right} className="node-handle" />

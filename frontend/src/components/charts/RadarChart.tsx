@@ -19,10 +19,10 @@ interface RadarChartProps {
 }
 
 const COLORS = [
-  'var(--accent-primary)',
-  'var(--success-text)', 
-  'var(--warning-text)',
-  '#8b5cf6'
+  '#22c55e',  // Green - bright
+  '#4ade80',  // Light green
+  '#fbbf24',  // Amber/Yellow
+  '#a855f7'   // Purple
 ];
 
 const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
@@ -35,9 +35,9 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
     y: number;
   } | null>(null);
 
-  const size = 500;
+  const size = 400;
   const center = size / 2;
-  const radius = 180;
+  const radius = 140;
   const angleStep = (2 * Math.PI) / metrics.length;
 
   // Calculate normalized values (0-1)
@@ -118,35 +118,6 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Legend */}
-      <div className="flex items-center gap-4 flex-wrap justify-center">
-        {sessions.map((session, index) => {
-          const isHidden = hiddenModels.has(index);
-          const color = COLORS[index % COLORS.length];
-          
-          return (
-            <button
-              key={session.id}
-              onClick={() => toggleModel(index)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
-              style={{
-                background: isHidden ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
-                border: isHidden ? '1px solid var(--border-secondary)' : `2px solid ${color}`,
-                opacity: isHidden ? 0.5 : 1
-              }}
-            >
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ background: color }}
-              />
-              <span className="text-sm font-medium" style={{ color: isHidden ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
-                Run {session.id}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* Radar Chart */}
       <div className="relative">
         <svg
@@ -164,16 +135,17 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
                 cy={center}
                 r={radius * level}
                 fill="none"
-                stroke="var(--border-primary)"
-                strokeWidth={1}
+                stroke="#44403c"
+                strokeWidth={1.5}
                 strokeDasharray="4 4"
-                opacity={0.5}
+                opacity={0.8}
               />
               <text
-                x={center + 5}
+                x={center + 3}
                 y={center - radius * level}
-                fontSize={10}
-                fill="var(--text-muted)"
+                fontSize={9}
+                fill="#a8a29e"
+                fontWeight={500}
                 textAnchor="start"
               >
                 {Math.round(level * 100)}%
@@ -186,8 +158,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
             const angle = i * angleStep - Math.PI / 2;
             const endX = center + radius * Math.cos(angle);
             const endY = center + radius * Math.sin(angle);
-            const labelX = center + (radius + 30) * Math.cos(angle);
-            const labelY = center + (radius + 30) * Math.sin(angle);
+            const labelX = center + (radius + 28) * Math.cos(angle);
+            const labelY = center + (radius + 28) * Math.sin(angle);
             
             return (
               <g key={metric.key}>
@@ -196,16 +168,16 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
                   y1={center}
                   x2={endX}
                   y2={endY}
-                  stroke="var(--border-primary)"
-                  strokeWidth={1}
-                  opacity={0.3}
+                  stroke="#57534e"
+                  strokeWidth={1.5}
+                  opacity={0.6}
                 />
                 <text
                   x={labelX}
                   y={labelY}
-                  fontSize={12}
-                  fontWeight={500}
-                  fill="var(--text-secondary)"
+                  fontSize={11}
+                  fontWeight={600}
+                  fill="#e7e5e4"
                   textAnchor="middle"
                   dominantBaseline="middle"
                 >
@@ -219,8 +191,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
           <circle
             cx={center}
             cy={center}
-            r={3}
-            fill="var(--text-muted)"
+            r={4}
+            fill="#a8a29e"
           />
 
           {/* Model polygons */}
@@ -236,7 +208,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
                 <path
                   d={path}
                   fill={color}
-                  fillOpacity={0.2}
+                  fillOpacity={0.35}
                   stroke="none"
                 />
                 {/* Border */}
@@ -244,7 +216,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
                   d={path}
                   fill="none"
                   stroke={color}
-                  strokeWidth={2}
+                  strokeWidth={3}
                   strokeLinejoin="round"
                 />
                 {/* Data points */}
@@ -258,11 +230,11 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
                       key={`${session.id}-${i}`}
                       cx={point.x}
                       cy={point.y}
-                      r={isHovered ? 8 : 5}
+                      r={isHovered ? 10 : 7}
                       fill={color}
-                      stroke="var(--bg-primary)"
+                      stroke="#0c0a09"
                       strokeWidth={2}
-                      opacity={isHovered ? 1 : 0.8}
+                      opacity={isHovered ? 1 : 0.9}
                       style={{ transition: 'all 0.2s ease' }}
                     />
                   );
@@ -275,30 +247,20 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
           {hoveredPoint && (
             <g>
               <rect
-                x={hoveredPoint.x + 10}
-                y={hoveredPoint.y - 40}
-                width={120}
-                height={35}
-                rx={6}
-                fill="var(--bg-secondary)"
-                stroke="var(--border-primary)"
+                x={hoveredPoint.x + 8}
+                y={hoveredPoint.y - 20}
+                width={100}
+                height={22}
+                rx={4}
+                fill="#1c1917"
+                stroke="#44403c"
                 strokeWidth={1}
               />
               <text
-                x={hoveredPoint.x + 70}
-                y={hoveredPoint.y - 22}
-                fontSize={11}
-                fontWeight={600}
-                fill="var(--text-secondary)"
-                textAnchor="middle"
-              >
-                Run {sessions[hoveredPoint.sessionIndex].id}
-              </text>
-              <text
-                x={hoveredPoint.x + 70}
-                y={hoveredPoint.y - 8}
-                fontSize={10}
-                fill="var(--text-muted)"
+                x={hoveredPoint.x + 58}
+                y={hoveredPoint.y - 4}
+                fontSize={9}
+                fill="#a8a29e"
                 textAnchor="middle"
               >
                 {metrics[hoveredPoint.metricIndex].label}: {(hoveredPoint.value * 100).toFixed(1)}%

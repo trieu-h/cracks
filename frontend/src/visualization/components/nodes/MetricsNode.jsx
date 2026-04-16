@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { BarChart3, TrendingUp, Award, Target, Zap, Info, Download, ChevronDown } from 'lucide-react';
+import { BarChart3, TrendingUp, Award, Target, Zap, Info } from 'lucide-react';
 import RadarChart from '../../../components/charts/RadarChart';
 import './NodeStyles.css';
 
@@ -81,7 +81,7 @@ const MetricsNode = ({ data }) => {
       
       <div className="node-header" onClick={() => data.openConceptDialog?.('metrics')}>
         <BarChart3 className="node-icon" size={18} />
-        <span className="node-title">Metrics Dashboard</span>
+        <span className="node-title">Metrics</span>
         <Info className="info-trigger" size={14} />
       </div>
 
@@ -106,9 +106,6 @@ const MetricsNode = ({ data }) => {
         {showRadar ? (
           <div className="radar-section">
             <RadarChart sessions={sessions} metrics={metrics} />
-            <p className="radar-hint">
-              Click legend to toggle model visibility
-            </p>
           </div>
         ) : (
           /* Cards View */
@@ -142,37 +139,7 @@ const MetricsNode = ({ data }) => {
           </div>
         )}
 
-        {/* Summary Stats */}
-        <div className="summary-section">
-          <div className="summary-row">
-            <span className="summary-label">Model Performance</span>
-            <span className="summary-rating">Excellent</span>
-          </div>
-          <div className="progress-summary">
-            <div className="mini-progress">
-              <span>Overall Score</span>
-              <div className="mini-bar">
-                <div 
-                  className="mini-fill"
-                  style={{ width: '85%' }}
-                />
-              </div>
-              <span>85%</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Export */}
-        <div className="export-row">
-          <button className="export-btn">
-            <Download size={14} />
-            <span>Export Report</span>
-          </button>
-          <button className="export-btn secondary">
-            <ChevronDown size={14} />
-            <span>Compare Models</span>
-          </button>
-        </div>
       </div>
 
       <Handle type="source" position={Position.Right} className="node-handle" />
