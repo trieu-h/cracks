@@ -80,52 +80,71 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
     });
   };
 
-  // Handle mouse move for hover
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+  // Get all metrics for the hovered session
+  const getHoveredSessionMetrics = () => {
+    if (!hoveredPoint) return null;
+    const session = sessions[hoveredPoint.sessionIndex];
+    return session?.latest_metrics;
+  };
+
+  const handlePointEnter = (sessionIndex: number, metricIndex: number, x: number, y: number) => {
+    const session = sessions[sessionIndex];
+    const metric = metrics[metricIndex];
+    const value = session?.latest_metrics?.[metric.key] || 0;
     
-    // Find nearest metric vertex
-    let minDistance = Infinity;
-    let nearestPoint: typeof hoveredPoint = null;
-    
-    sessions.forEach((session, sessionIndex) => {
-      if (hiddenModels.has(sessionIndex)) return;
-      
-      metrics.forEach((metric, metricIndex) => {
-        const value = getNormalizedValue(session, metric);
-        const point = getPoint(metricIndex, value);
-        const distance = Math.sqrt(
-          Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2)
-        );
-        
-        if (distance < 30 && distance < minDistance) {
-          minDistance = distance;
-          nearestPoint = {
-            sessionIndex,
-            metricIndex,
-            value: session.latest_metrics?.[metric.key] || 0,
-            x: point.x,
-            y: point.y
-          };
-        }
-      });
+    setHoveredPoint({
+      sessionIndex,
+      metricIndex,
+      value,
+      x,
+      y
     });
-    
-    setHoveredPoint(nearestPoint);
+  };
+
+  const handlePointLeave = () => {
+    setHoveredPoint(null);
   };
 
   return (
     <div className="flex flex-col items-center gap-6">
+      {/* Legend - only show when multiple sessions exist */}
+      {sessions.length > 1 && (
+        <div className="flex items-center gap-4 flex-wrap justify-center">
+          {sessions.map((session, index) => {
+            const isHidden = hiddenModels.has(index);
+            const color = COLORS[index % COLORS.length];
+            
+            return (
+              <button
+                key={session.id}
+                onClick={() => toggleModel(index)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+                style={{
+                  background: isHidden ? '#292524' : '#1c1917',
+                  border: isHidden ? '1px solid #44403c' : `2px solid ${color}`,
+                  opacity: isHidden ? 0.5 : 1
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ background: color }}
+                />
+                <span className="text-sm font-medium" style={{ color: isHidden ? '#78716c' : '#e7e5e4' }}>
+                  Run {session.id}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Radar Chart */}
       <div className="relative">
         <svg
           width={size}
           height={size}
           className="cursor-crosshair"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setHoveredPoint(null)}
+          onMouseLeave={handlePointLeave}
         >
           {/* Grid circles */}
           {[0.25, 0.5, 0.75, 1].map(level => (
@@ -219,7 +238,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
                   strokeWidth={3}
                   strokeLinejoin="round"
                 />
-                {/* Data points */}
+                {/* Visible data points only (no hit areas here) */}
                 {metrics.map((metric, i) => {
                   const value = getNormalizedValue(session, metric);
                   const point = getPoint(i, value);
@@ -243,30 +262,104 @@ const RadarChart: React.FC<RadarChartProps> = ({ sessions, metrics }) => {
             );
           })}
 
-          {/* Hover tooltip */}
-          {hoveredPoint && (
-            <g>
-              <rect
-                x={hoveredPoint.x + 8}
-                y={hoveredPoint.y - 20}
-                width={100}
-                height={22}
-                rx={4}
-                fill="#1c1917"
-                stroke="#44403c"
-                strokeWidth={1}
-              />
-              <text
-                x={hoveredPoint.x + 58}
-                y={hoveredPoint.y - 4}
-                fontSize={9}
-                fill="#a8a29e"
-                textAnchor="middle"
-              >
-                {metrics[hoveredPoint.metricIndex].label}: {(hoveredPoint.value * 100).toFixed(1)}%
-              </text>
-            </g>
-          )}
+          {/* Separate hit areas layer - all on top so none are blocked */}
+          {sessions.map((session, sessionIndex) => {
+            if (hiddenModels.has(sessionIndex)) return null;
+            
+            return (
+              <g key={`hit-${session.id}`}>
+                {metrics.map((metric, metricIndex) => {
+                  const value = getNormalizedValue(session, metric);
+                  const point = getPoint(metricIndex, value);
+                  
+                  return (
+                    <circle
+                      key={`hit-${session.id}-${metric.key}`}
+                      cx={point.x}
+                      cy={point.y}
+                      r={12}
+                      fill="transparent"
+                      onMouseEnter={() => handlePointEnter(sessionIndex, metricIndex, point.x, point.y)}
+                      onMouseLeave={handlePointLeave}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
+
+          {/* Hover tooltip - Show all metrics */}
+          {hoveredPoint && (() => {
+            const sessionMetrics = getHoveredSessionMetrics();
+            const metricLines = [
+              { key: 'f1', label: 'F1' },
+              { key: 'precision', label: 'Precision' },
+              { key: 'recall', label: 'Recall' },
+              { key: 'mAP50', label: 'mAP50' },
+              { key: 'mAP50_95', label: 'mAP50-95' }
+            ].filter(m => sessionMetrics && sessionMetrics[m.key] !== undefined);
+            
+            const tooltipWidth = 140;
+            const lineHeight = 16;
+            const headerHeight = sessions.length > 1 ? 18 : 0;
+            const tooltipHeight = 12 + headerHeight + (metricLines.length * lineHeight);
+            
+            return (
+              <g>
+                <rect
+                  x={hoveredPoint.x + 10}
+                  y={hoveredPoint.y - tooltipHeight}
+                  width={tooltipWidth}
+                  height={tooltipHeight}
+                  rx={4}
+                  fill="#1c1917"
+                  stroke="#44403c"
+                  strokeWidth={1}
+                />
+                {sessions.length > 1 && (
+                  <text
+                    x={hoveredPoint.x + 80}
+                    y={hoveredPoint.y - tooltipHeight + 14}
+                    fontSize={10}
+                    fontWeight={600}
+                    fill="#fafaf9"
+                    textAnchor="middle"
+                  >
+                    Run {sessions[hoveredPoint.sessionIndex].id}
+                  </text>
+                )}
+                {metricLines.map((m, i) => {
+                  const value = sessionMetrics?.[m.key] || 0;
+                  const isHovered = metrics[hoveredPoint.metricIndex].key === m.key;
+                  return (
+                    <g key={m.key}>
+                      <text
+                        x={hoveredPoint.x + 18}
+                        y={hoveredPoint.y - tooltipHeight + 14 + headerHeight + (i * lineHeight)}
+                        fontSize={9}
+                        fontWeight={isHovered ? 600 : 400}
+                        fill={isHovered ? "#fafaf9" : "#a8a29e"}
+                        textAnchor="start"
+                      >
+                        {m.label}:
+                      </text>
+                      <text
+                        x={hoveredPoint.x + tooltipWidth - 10}
+                        y={hoveredPoint.y - tooltipHeight + 14 + headerHeight + (i * lineHeight)}
+                        fontSize={9}
+                        fontWeight={isHovered ? 600 : 400}
+                        fill={isHovered ? "#4ade80" : "#a8a29e"}
+                        textAnchor="end"
+                      >
+                        {(value * 100).toFixed(1)}%
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })()}
         </svg>
       </div>
     </div>

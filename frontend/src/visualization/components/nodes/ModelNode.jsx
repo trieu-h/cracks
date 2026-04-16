@@ -27,10 +27,18 @@ const ModelNode = ({ data }) => {
     <div className="node-card model-node">
       <Handle type="target" position={Position.Left} className="node-handle" />
       
-      <div className="node-header" onClick={() => data.openConceptDialog?.('architecture')}>
+      <div className="node-header">
         <Layers className="node-icon" size={18} />
         <span className="node-title">Model Architecture</span>
-        <Info className="info-trigger" size={14} />
+        <Info 
+          className="info-trigger" 
+          size={14} 
+          onClick={(e) => {
+            e.stopPropagation();
+            data.openConceptDialog?.('architecture');
+          }}
+          style={{ cursor: 'pointer' }}
+        />
       </div>
 
       <div className="node-content">

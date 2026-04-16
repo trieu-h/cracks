@@ -79,10 +79,18 @@ const MetricsNode = ({ data }) => {
     <div className="node-card metrics-node">
       <Handle type="target" position={Position.Left} className="node-handle" />
       
-      <div className="node-header" onClick={() => data.openConceptDialog?.('metrics')}>
+      <div className="node-header">
         <BarChart3 className="node-icon" size={18} />
         <span className="node-title">Metrics</span>
-        <Info className="info-trigger" size={14} />
+        <Info 
+          className="info-trigger" 
+          size={14} 
+          onClick={(e) => {
+            e.stopPropagation();
+            data.openConceptDialog?.('metrics');
+          }}
+          style={{ cursor: 'pointer' }}
+        />
       </div>
 
       <div className="node-content">

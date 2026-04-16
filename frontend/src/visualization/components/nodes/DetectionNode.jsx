@@ -56,10 +56,18 @@ const DetectionNode = ({ data }) => {
     <div className="node-card detection-node">
       <Handle type="target" position={Position.Left} className="node-handle" />
       
-      <div className="node-header" onClick={() => data.openConceptDialog?.('detection')}>
+      <div className="node-header">
         <Eye className="node-icon" size={18} />
         <span className="node-title">Detection</span>
-        <Info className="info-trigger" size={14} />
+        <Info 
+          className="info-trigger" 
+          size={14} 
+          onClick={(e) => {
+            e.stopPropagation();
+            data.openConceptDialog?.('detection');
+          }}
+          style={{ cursor: 'pointer' }}
+        />
       </div>
 
       <div className="node-content">

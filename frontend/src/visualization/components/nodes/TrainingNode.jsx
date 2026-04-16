@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Play, Pause, Square, Activity, TrendingDown, Clock, RotateCcw, Info } from 'lucide-react';
+import { Pause, Activity, TrendingDown, Target, Zap, Clock, RotateCcw, Info } from 'lucide-react';
 import './NodeStyles.css';
 
 // Simple chart component using canvas
@@ -32,13 +32,13 @@ const MiniChart = ({ data, color, width = 200, height = 60 }) => {
     }
     ctx.stroke();
 
-    // Draw chart line with bright color
+    // Draw chart line with the passed color
     const maxVal = Math.max(...data, 1);
     const minVal = Math.min(...data, 0);
     const range = maxVal - minVal || 1;
 
     ctx.beginPath();
-    ctx.strokeStyle = '#4ade80';  // Bright green, always visible
+    ctx.strokeStyle = color || '#4ade80';  // Use passed color or default bright green
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -52,19 +52,28 @@ const MiniChart = ({ data, color, width = 200, height = 60 }) => {
     });
     ctx.stroke();
 
-    // Draw current point with glow effect
+    // Draw current point with glow effect using the passed color
     const lastY = height - ((data[data.length - 1] - minVal) / range) * (height - 10) - 5;
+    const chartColor = color || '#4ade80';
+    
+    // Convert hex to rgba for glow
+    const hexToRgba = (hex, alpha) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
     
     // Glow
     ctx.beginPath();
     ctx.arc(width - 4, lastY, 6, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
+    ctx.fillStyle = hexToRgba(chartColor, 0.3);
     ctx.fill();
     
     // Point
     ctx.beginPath();
     ctx.arc(width - 4, lastY, 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#4ade80';
+    ctx.fillStyle = chartColor;
     ctx.fill();
   }, [data, color, width, height]);
 
@@ -72,38 +81,57 @@ const MiniChart = ({ data, color, width = 200, height = 60 }) => {
 };
 
 const TrainingNode = ({ data }) => {
-  const [isTraining, setIsTraining] = useState(false);
-  const [currentEpoch, setCurrentEpoch] = useState(0);
+  const [isTraining, setIsTraining] = useState(true); // Auto-start for demo
+  const [currentEpoch, setCurrentEpoch] = useState(1);
   const [totalEpochs] = useState(100);
-  const [lossHistory, setLossHistory] = useState([]);
-  const [mapHistory, setMapHistory] = useState([]);
+  const [lossHistory, setLossHistory] = useState([2.5]);
+  const [mapHistory, setMapHistory] = useState([30]);
+  const [precisionHistory, setPrecisionHistory] = useState([40]);
+  const [recallHistory, setRecallHistory] = useState([35]);
   const [currentLoss, setCurrentLoss] = useState(2.5);
-  const [currentMap, setCurrentMap] = useState(0);
+  const [currentMap, setCurrentMap] = useState(0.3);
+  const [currentPrecision, setCurrentPrecision] = useState(0.4);
+  const [currentRecall, setCurrentRecall] = useState(0.35);
   const [trainingTime, setTrainingTime] = useState(0);
   const intervalRef = useRef(null);
-  const startTimeRef = useRef(null);
+  const startTimeRef = useRef(Date.now()); // Auto-start timer
 
-  // Simulate training
+  // Simulate training - continuously loops for demo
   useEffect(() => {
     if (isTraining) {
-      if (!startTimeRef.current) startTimeRef.current = Date.now();
-      
       intervalRef.current = setInterval(() => {
         setCurrentEpoch(prev => {
-          const next = prev + 1;
-          if (next >= totalEpochs) {
-            setIsTraining(false);
-            return totalEpochs;
+          let next = prev + 1;
+          
+          // Loop back to start when reaching the end
+          if (next > totalEpochs) {
+            next = 1;
+            setLossHistory([2.5]);
+            setMapHistory([30]);
+            setPrecisionHistory([40]);
+            setRecallHistory([35]);
+            setCurrentLoss(2.5);
+            setCurrentMap(0.3);
+            setCurrentPrecision(0.4);
+            setCurrentRecall(0.35);
+            startTimeRef.current = Date.now();
+            setTrainingTime(0);
           }
           
           // Simulate metrics
           const newLoss = 2.5 * Math.exp(-next / 30) + 0.1 + Math.random() * 0.05;
           const newMap = Math.min(0.95, 0.3 + (next / totalEpochs) * 0.65 + Math.random() * 0.05);
+          const newPrecision = Math.min(0.95, 0.4 + (next / totalEpochs) * 0.55 + Math.random() * 0.05);
+          const newRecall = Math.min(0.95, 0.35 + (next / totalEpochs) * 0.6 + Math.random() * 0.05);
           
           setCurrentLoss(newLoss);
           setCurrentMap(newMap);
+          setCurrentPrecision(newPrecision);
+          setCurrentRecall(newRecall);
           setLossHistory(h => [...h.slice(-50), newLoss]);
           setMapHistory(h => [...h.slice(-50), newMap]);
+          setPrecisionHistory(h => [...h.slice(-50), newPrecision * 100]);
+          setRecallHistory(h => [...h.slice(-50), newRecall * 100]);
           
           // Update time
           const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
@@ -119,24 +147,6 @@ const TrainingNode = ({ data }) => {
     return () => clearInterval(intervalRef.current);
   }, [isTraining, totalEpochs]);
 
-  const startTraining = () => {
-    if (currentEpoch >= totalEpochs) {
-      // Reset
-      setCurrentEpoch(0);
-      setLossHistory([]);
-      setMapHistory([]);
-      setCurrentLoss(2.5);
-      setCurrentMap(0);
-      startTimeRef.current = null;
-      setTrainingTime(0);
-    }
-    setIsTraining(true);
-  };
-
-  const stopTraining = () => {
-    setIsTraining(false);
-  };
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -149,10 +159,18 @@ const TrainingNode = ({ data }) => {
     <div className="node-card training-node">
       <Handle type="target" position={Position.Left} className="node-handle" />
       
-      <div className="node-header" onClick={() => data.openConceptDialog?.('training')}>
+      <div className="node-header">
         <Activity className="node-icon" size={18} />
         <span className="node-title">Training Monitor</span>
-        <Info className="info-trigger" size={14} />
+        <Info 
+          className="info-trigger" 
+          size={14} 
+          onClick={(e) => {
+            e.stopPropagation();
+            data.openConceptDialog?.('training');
+          }}
+          style={{ cursor: 'pointer' }}
+        />
       </div>
 
       <div className="node-content">
@@ -182,7 +200,7 @@ const TrainingNode = ({ data }) => {
             </div>
             <MiniChart 
               data={lossHistory.length > 0 ? lossHistory : [2.5, 2.4, 2.3, 2.2]} 
-              color="var(--accent-primary)" 
+              color="#ef4444" 
             />
           </div>
           
@@ -193,66 +211,34 @@ const TrainingNode = ({ data }) => {
             </div>
             <MiniChart 
               data={mapHistory.length > 0 ? mapHistory.map(m => m * 100) : [30, 35, 42, 48]} 
-              color="var(--success-text)" 
+              color="#3b82f6" 
             />
           </div>
         </div>
 
-        {/* Live Preview */}
-        <div className="preview-section">
-          <span className="preview-label">Recent Predictions</span>
-          <div className="preview-thumbs">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="preview-thumb">
-                <div className="thumb-placeholder">
-                  <span>Epoch {(Math.max(1, currentEpoch - 3 + i))}</span>
-                </div>
-                {isTraining && (
-                  <div className="thumb-overlay">
-                    <Activity size={12} />
-                  </div>
-                )}
-              </div>
-            ))}
+        {/* Additional Charts - Precision & Recall */}
+        <div className="charts-grid">
+          <div className="chart-box">
+            <div className="chart-header">
+              <Target size={14} />
+              <span>Precision: {(currentPrecision * 100).toFixed(1)}%</span>
+            </div>
+            <MiniChart 
+              data={precisionHistory.length > 0 ? precisionHistory : [40, 45, 52, 58]} 
+              color="#22c55e" 
+            />
           </div>
-        </div>
-
-        {/* Controls */}
-        <div className="training-controls">
-          {!isTraining ? (
-            <button className="control-btn primary" onClick={startTraining}>
-              <Play size={16} />
-              {currentEpoch >= totalEpochs ? 'Retrain' : 'Start Training'}
-            </button>
-          ) : (
-            <>
-              <button className="control-btn secondary" onClick={stopTraining}>
-                <Pause size={16} />
-                Pause
-              </button>
-              <button className="control-btn danger" onClick={stopTraining}>
-                <Square size={16} />
-                Stop
-              </button>
-            </>
-          )}
           
-          <button 
-            className="control-btn ghost"
-            onClick={() => {
-              setCurrentEpoch(0);
-              setLossHistory([]);
-              setMapHistory([]);
-              setCurrentLoss(2.5);
-              setCurrentMap(0);
-              setTrainingTime(0);
-              startTimeRef.current = null;
-              setIsTraining(false);
-            }}
-            disabled={isTraining || currentEpoch === 0}
-          >
-            <RotateCcw size={14} />
-          </button>
+          <div className="chart-box">
+            <div className="chart-header">
+              <Zap size={14} />
+              <span>Recall: {(currentRecall * 100).toFixed(1)}%</span>
+            </div>
+            <MiniChart 
+              data={recallHistory.length > 0 ? recallHistory : [35, 42, 50, 57]} 
+              color="#a855f7" 
+            />
+          </div>
         </div>
       </div>
 

@@ -51,10 +51,18 @@ const DatasetNode = ({ data }) => {
     <div className={`node-card dataset-node ${isDragging ? 'dragging' : ''}`}>
       <Handle type="target" position={Position.Left} className="node-handle" />
       
-      <div className="node-header" onClick={() => data.openConceptDialog?.('dataset')}>
+      <div className="node-header">
         <Database className="node-icon" size={18} />
         <span className="node-title">Dataset</span>
-        <Info className="info-trigger" size={14} />
+        <Info 
+          className="info-trigger" 
+          size={14} 
+          onClick={(e) => {
+            e.stopPropagation();
+            data.openConceptDialog?.('dataset');
+          }}
+          style={{ cursor: 'pointer' }}
+        />
       </div>
 
       <div className="node-content">

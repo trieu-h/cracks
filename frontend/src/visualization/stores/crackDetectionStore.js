@@ -33,26 +33,26 @@ export const useCrackDetectionStore = create((set, get) => ({
     }
   },
   
-  // Training state
+  // Training state - auto-running for demonstration
   trainingState: {
-    isTraining: false,
+    isTraining: true,
     isPaused: false,
-    currentEpoch: 0,
+    currentEpoch: 1,
     totalEpochs: 100,
     currentBatch: 0,
     totalBatches: 0,
     loss: {
-      boxLoss: 0,
-      clsLoss: 0,
-      dflLoss: 0,
-      totalLoss: 0,
+      boxLoss: 1.5,
+      clsLoss: 0.75,
+      dflLoss: 0.25,
+      totalLoss: 2.5,
     },
     history: {
-      loss: [],
-      map50: [],
-      map50_95: [],
-      precision: [],
-      recall: [],
+      loss: [2.5],
+      map50: [0.3],
+      map50_95: [0.2],
+      precision: [0.4],
+      recall: [0.35],
     }
   },
   
@@ -228,14 +228,38 @@ export const useCrackDetectionStore = create((set, get) => ({
     }
   })),
   
-  // Simulate training step (for demo purposes)
+  // Simulate training step (for demo purposes) - continuously loops
   simulateTrainingStep: () => set((state) => {
     if (!state.trainingState.isTraining || state.trainingState.isPaused) {
       return state;
     }
     
-    const newEpoch = state.trainingState.currentEpoch + 1;
+    let newEpoch = state.trainingState.currentEpoch + 1;
     const totalEpochs = state.trainingState.totalEpochs;
+    
+    // Reset to loop training for continuous demo
+    if (newEpoch > totalEpochs) {
+      newEpoch = 1;
+      return {
+        trainingState: {
+          ...state.trainingState,
+          currentEpoch: newEpoch,
+          loss: {
+            boxLoss: 1.5,
+            clsLoss: 0.75,
+            dflLoss: 0.25,
+            totalLoss: 2.5,
+          },
+          history: {
+            loss: [2.5],
+            map50: [0.3],
+            map50_95: [0.2],
+            precision: [0.4],
+            recall: [0.35],
+          }
+        }
+      };
+    }
     
     // Simulate loss decreasing
     const baseLoss = 2.5;

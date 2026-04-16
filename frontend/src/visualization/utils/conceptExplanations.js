@@ -276,4 +276,113 @@ y: [[2], [4], [6], [8], [10], [12], [14], [16]]`,
     `,
     fileReference: 'LearningProgressNode.jsx',
   },
+
+  'dataset': {
+    title: 'Dataset',
+    explanation: `
+      <p>
+        The <strong>Dataset</strong> contains all the images used to train and evaluate the crack detection model.
+      </p>
+      <p>
+        A good dataset needs:
+      </p>
+      <ul>
+        <li><strong>Training images</strong> - photos with cracks for the model to learn from</li>
+        <li><strong>Validation images</strong> - separate photos to check if learning is working</li>
+        <li><strong>Labels</strong> - marked locations of cracks so the model knows what to find</li>
+      </ul>
+      <p>
+        The more diverse and high-quality images you have, the better your model will perform on real-world concrete structures.
+      </p>
+    `,
+    fileReference: 'DatasetNode.jsx',
+  },
+
+  'architecture': {
+    title: 'Model Architecture',
+    explanation: `
+      <p>
+        <strong>YOLO (You Only Look Once)</strong> is the neural network architecture used for crack detection.
+      </p>
+      <p>
+        It works in three stages:
+      </p>
+      <ul>
+        <li><strong>Backbone</strong> - Extracts features from the image using convolutional layers</li>
+        <li><strong>Neck (PANet)</strong> - Combines features at different scales to detect cracks of various sizes</li>
+        <li><strong>Head</strong> - Makes the final predictions: where cracks are and how confident it is</li>
+      </ul>
+      <p>
+        The "v11" and "v26" variants differ in speed vs accuracy trade-offs.
+      </p>
+    `,
+    fileReference: 'ModelNode.jsx',
+  },
+
+  'training': {
+    title: 'Training Monitor',
+    explanation: `
+      <p>
+        <strong>Training</strong> is the process where the model learns to detect cracks by adjusting its internal parameters.
+      </p>
+      <p>
+        Key metrics to watch:
+      </p>
+      <ul>
+        <li><strong>Loss</strong> - How wrong the predictions are (should decrease over time)</li>
+        <li><strong>mAP50</strong> - Mean Average Precision at 50% overlap threshold</li>
+        <li><strong>Precision</strong> - Accuracy of detected cracks (fewer false positives)</li>
+        <li><strong>Recall</strong> - Coverage of actual cracks found (fewer misses)</li>
+      </ul>
+      <p>
+        Training runs through multiple epochs, gradually improving until the model converges.
+      </p>
+    `,
+    fileReference: 'TrainingNode.jsx',
+  },
+
+  'detection': {
+    title: 'Detection',
+    explanation: `
+      <p>
+        <strong>Detection</strong> is the final step where the trained model identifies cracks in new images.
+      </p>
+      <p>
+        The model outputs:
+      </p>
+      <ul>
+        <li><strong>Bounding boxes</strong> - Rectangles around detected cracks</li>
+        <li><strong>Confidence scores</strong> - How sure the model is (0-100%)</li>
+        <li><strong>Class labels</strong> - Type of defect (e.g., "crack")</li>
+      </ul>
+      <p>
+        You can adjust the <strong>confidence threshold</strong> to filter out uncertain detections.
+        Lower thresholds catch more cracks but may include false positives.
+      </p>
+    `,
+    fileReference: 'DetectionNode.jsx',
+  },
+
+  'metrics': {
+    title: 'Metrics Dashboard',
+    explanation: `
+      <p>
+        The <strong>Metrics Dashboard</strong> evaluates how well the trained model performs.
+      </p>
+      <p>
+        Key performance indicators:
+      </p>
+      <ul>
+        <li><strong>F1 Score</strong> - Balance between precision and recall (harmonic mean)</li>
+        <li><strong>Precision</strong> - Of all detected "cracks", how many are actually cracks</li>
+        <li><strong>Recall</strong> - Of all actual cracks, how many were detected</li>
+        <li><strong>mAP50</strong> - Overall detection quality at 50% overlap threshold</li>
+        <li><strong>mAP50-95</strong> - Quality across stricter overlap requirements</li>
+      </ul>
+      <p>
+        The radar chart helps visualize trade-offs between different metrics at a glance.
+      </p>
+    `,
+    fileReference: 'MetricsNode.jsx',
+  },
 };

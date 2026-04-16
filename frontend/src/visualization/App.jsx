@@ -6,6 +6,7 @@ import ModelNode from './components/nodes/ModelNode';
 import TrainingNode from './components/nodes/TrainingNode';
 import DetectionNode from './components/nodes/DetectionNode';
 import MetricsNode from './components/nodes/MetricsNode';
+import ConceptDialog from './components/ConceptDialog';
 import { useCrackDetectionStore } from './stores/crackDetectionStore';
 
 const nodeTypes = {
@@ -36,6 +37,17 @@ function App() {
   const runDetection = useCrackDetectionStore(state => state.runDetection);
   const resetMetrics = useCrackDetectionStore(state => state.resetMetrics);
 
+  // State for concept dialog
+  const [activeConcept, setActiveConcept] = useState(null);
+
+  const openConceptDialog = useCallback((conceptKey) => {
+    setActiveConcept(conceptKey);
+  }, []);
+
+  const closeConceptDialog = useCallback(() => {
+    setActiveConcept(null);
+  }, []);
+
   // Define nodes for the crack detection workflow
   // Flow: Dataset → Model Architecture → Training Monitor → [Detection ↑ Metrics Dashboard]
   const nodes = useMemo(() => [
@@ -46,6 +58,7 @@ function App() {
       data: {
         config: datasetConfig,
         onConfigChange: updateDatasetConfig,
+        openConceptDialog,
       }
     },
     {
@@ -55,6 +68,7 @@ function App() {
       data: {
         config: modelConfig,
         onConfigChange: updateModelConfig,
+        openConceptDialog,
       }
     },
     {
@@ -65,6 +79,7 @@ function App() {
         state: trainingState,
         onStart: startTraining,
         onStop: stopTraining,
+        openConceptDialog,
       }
     },
     {
@@ -74,6 +89,7 @@ function App() {
       data: {
         results: detectionResults,
         onRunDetection: runDetection,
+        openConceptDialog,
       }
     },
     {
@@ -83,12 +99,13 @@ function App() {
       data: {
         metrics: metrics,
         onReset: resetMetrics,
+        openConceptDialog,
       }
     }
   ], [
     datasetConfig, modelConfig, trainingState, detectionResults, metrics,
     updateDatasetConfig, updateModelConfig, startTraining, stopTraining, 
-    runDetection, resetMetrics
+    runDetection, resetMetrics, openConceptDialog
   ]);
 
   // Define edges connecting the workflow - white dotted lines with flowing animation
@@ -200,6 +217,12 @@ function App() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
       />
+      {activeConcept && (
+        <ConceptDialog
+          conceptKey={activeConcept}
+          onClose={closeConceptDialog}
+        />
+      )}
     </div>
   );
 }
